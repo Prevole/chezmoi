@@ -1,5 +1,5 @@
 [tools]
-java = "temurin-26.0.0+35"
+java = "temurin"
 maven = "latest"
 node = "latest"
 python = "latest"

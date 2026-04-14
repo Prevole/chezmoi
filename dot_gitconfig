@@ -54,14 +54,6 @@
 
 [credential "https://git.intern.REDACTED.net"]
 	provider = generic
-
-[credential]
-	helper = 
-	helper = /usr/local/share/gcm-core/git-credential-manager
-
-[credential "https://dev.azure.com"]
-	useHttpPath = true
-
 [user]
 	name = Prevole
 	email = prevole@REDACTED.ch
@@ -80,4 +72,8 @@
 
 [includeIf "gitdir:~/.local/share/chezmoi/"]
   path = ~/.gitconf/pro/.gitconfig
-
+[credential]
+	helper = 
+	helper = /usr/local/share/gcm-core/git-credential-manager
+[credential "https://dev.azure.com"]
+	useHttpPath = true
