@@ -38,7 +38,7 @@ brew "zsh"
 
 cask "1password"
 cask "1password-cli"
-cask "alacritty"
+# cask "alacritty" <- Not passing the Apple verifications
 # cask "adguard"
 cask "adobe-creative-cloud"
 # cask "cursor"
