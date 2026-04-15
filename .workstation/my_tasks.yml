@@ -1,60 +1,29 @@
-- name: Register variable to refer to the env repository
-  set_fact:
-    workstation_directory: '/tmp/{{ all_env_repository_name }}/.workstation'
-
-- name: Retrieve powerlevel10k fonts
-  register: p10k_fonts_stat
-  stat:
-    path: "{{ all_home_directory }}/Library/Fonts/{{ local_url | regex_replace('https://', '') | basename }}"
-  loop: "{{ powerlevel10k_fonts }}"
-  loop_control:
-    loop_var: local_url
-
-- name: Downloads fonts
-  when: not local_font.stat.exists
-  get_url:
-    url: "{{ local_font.local_url }}"
-    dest: "{{ all_home_directory }}/Library/Fonts/{{ local_font.local_url | regex_replace('https://', '') | basename }}"
-  loop: "{{ p10k_fonts_stat.results }}"
-  loop_control:
-    loop_var: local_font
-
-- name: vim Setup
-  block:
-   - name: Create vim plugins folder
-     file:
-       path: '{{ all_home_directory }}/.vim/pack/plugins/start'
-       state: directory
-
-   # For more plugins: https://vimawesome.com/
-   - name: Install vim plugins
-     git:
-       repo: '{{ local_vim_plugin_repo.url }}'
-       dest: '{{ all_home_directory }}/.vim/pack/plugins/start/{{ local_vim_plugin_repo.name }}'
-     loop:
-       - name: nerdtree
-         url: https://github.com/scrooloose/nerdtree.git
-       - name: nerdtree-git
-         url: https://github.com/xuyuanp/nerdtree-git-plugin.git
-       - name: airline
-         url: https://github.com/vim-airline/vim-airline
-       - name: multiple-cursors
-         url: https://github.com/terryma/vim-multiple-cursors
-       - name: surround
-         url: https://tpope.io/vim/surround.git
-       - name: editorconfig
-         url: https://github.com/editorconfig/editorconfig-vim.git
-       - name: colors-solarized
-         url: https://github.com/altercation/vim-colors-solarized.git
-     loop_control:
-       loop_var: local_vim_plugin_repo
-
-- name: Git additional setup
-  block:
-    - name: Gather Git config
-      shell: 'cat {{ all_home_directory }}/.gitconfig'
-      register: local_git_configuration
-
-    - name: Configure Git OSX KeyChain
-      shell: git config --global credential.helper osxkeychain
-      when: local_git_configuration.stdout.find('helper = osxkeychain') != -1
+#- name: vim Setup
+#  block:
+#   - name: Create vim plugins folder
+#     file:
+#       path: '{{ all_home_directory }}/.vim/pack/plugins/start'
+#       state: directory
+#
+#   # For more plugins: https://vimawesome.com/
+#   - name: Install vim plugins
+#     git:
+#       repo: '{{ local_vim_plugin_repo.url }}'
+#       dest: '{{ all_home_directory }}/.vim/pack/plugins/start/{{ local_vim_plugin_repo.name }}'
+#     loop:
+#       - name: nerdtree
+#         url: https://github.com/scrooloose/nerdtree.git
+#       - name: nerdtree-git
+#         url: https://github.com/xuyuanp/nerdtree-git-plugin.git
+#       - name: airline
+#         url: https://github.com/vim-airline/vim-airline
+#       - name: multiple-cursors
+#         url: https://github.com/terryma/vim-multiple-cursors
+#       - name: surround
+#         url: https://tpope.io/vim/surround.git
+#       - name: editorconfig
+#         url: https://github.com/editorconfig/editorconfig-vim.git
+#       - name: colors-solarized
+#         url: https://github.com/altercation/vim-colors-solarized.git
+#     loop_control:
+#       loop_var: local_vim_plugin_repo

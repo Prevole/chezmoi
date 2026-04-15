@@ -1,0 +1,32 @@
+[".oh-my-zsh/custom/themes/powerlevel10k"]
+  type = "git-repo"
+  url = "https://github.com/romkatv/powerlevel10k.git"
+  refreshPeriod = "168h"
+
+[".oh-my-zsh/custom/plugins/zsh-autosuggestions"]
+  type = "git-repo"
+  url = "https://github.com/zsh-users/zsh-autosuggestions"
+  refreshPeriod = "168h"
+
+[".oh-my-zsh/custom/plugins/zsh-syntax-highlighting"]
+  type = "git-repo"
+  url = "https://github.com/zsh-users/zsh-syntax-highlighting"
+  refreshPeriod = "168h"
+
+[p10k_fonts]
+    type = "archive"
+    url = "https://github.com/romkatv/powerlevel10k-media/archive/master.tar.gz"
+    exact = false
+    stripComponents = 1
+    refreshPeriod = "168h"
+    include = ["*/*.ttf"]
+    targetPath = "Library/Fonts"
+
+[source_code_pro]
+    type = "archive"
+    url = "https://github.com/adobe-fonts/source-code-pro/archive/master.tar.gz"
+    exact = false
+    stripComponents = 2
+    refreshPeriod = "168h"
+    include = ["**/*.ttf"]
+    targetPath = "Library/Fonts"

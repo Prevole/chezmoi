@@ -1,91 +1,25 @@
-# Additional client tools
-my_clitools:
-  - asciinema
-  - diff-so-fancy
-  - displayplacer
-  - testdisk
+## Install additional applications
+#my_applications:
+##  - gpg-suite-no-mail
+##  - skitch <- No more available from Evernote website
+##  - balenaetcher
+##  - inkscape
+##  - raspberry-pi-imager
+##  - sublime-text
+##  - visual-studio-code
+##  - typora
+##  - vlc
 
-# Additional fonts
-my_fonts:
-  - font-hack-nerd-font
-  - font-source-code-pro
-
-# Additional oh-my-zsh themes
-my_ohmyzsh_external_themes:
-  - repo: https://github.com/romkatv/powerlevel10k.git
-    name: powerlevel10k
-
-# Additional oh-my-zsh plugins
-my_ohmyzsh_external_plugins:
-  - repo: https://github.com/zsh-users/zsh-autosuggestions
-    name: zsh-autosuggestions
-  - repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
-    name: zsh-syntax-highlighting
-
-# Additional browsers
-my_browsers:
-  - firefox@developer-edition
-
-# Additional communication applications
-my_communication_applications: []
-
-# Install additional applications
-my_applications:
-  - 1password
-  - 1password-cli
-  - adguard
-  - adobe-creative-cloud
-  - cursor
-  - cyberduck
-#  - gpg-suite-no-mail
-  - macfuse
-  - rectangle
-#  - skitch <- No more available from Evernote website
-#  - balenaetcher
-#  - inkscape
-#  - raspberry-pi-imager
-#  - sublime-text
-#  - visual-studio-code
-#  - typora
-#  - vlc
-
-my_node_modules: []
-#  - asciicast2gif
-
-my_homebrew_taps:
-  - jakehilborn/jakehilborn
-
-# Clone default git repositories
-my_repositories:
-  - dest: mo
-    repos:
-      - REDACTED/eva-osx
-      - REDACTED/jamf
-      - REDACTED/wellness-insights
-  - dest: private
-    repos:
-      - '{{ all_git_username }}/iTerm2'
-
-my_chezmoi_use: true
-
-powerlevel10k_fonts:
-  - https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf
-  - https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf
-  - https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf
-  - https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf
-
-my_dock_items:
-  - System Settings
-  - iTerm
-  - Microsoft Outlook
-  - Microsoft Teams
-  - Firefox
-  - Firefox Developer Edition
-  - Google Chrome
-  - Safari
-  - Microsoft Word
-  - Microsoft Excel
-  - Microsoft Powerpoint
+## Clone default git repositories
+#my_repositories:
+#  - dest: mo
+#    repos:
+#      - REDACTED/eva-osx
+#      - REDACTED/jamf
+#      - REDACTED/wellness-insights
+#  - dest: private
+#    repos:
+#      - '{{ all_git_username }}/iTerm2'
 
 my_osx_defaults:
   - label: Configure the finder list view of files
@@ -584,17 +518,17 @@ my_osx_defaults:
     type: int
     value: 0
 
-  - label: Save screenshots to Downloads/screenshots
-    domain: com.apple.screencapture
-    key: location
-    type: string
-    value: "{{ all_home_directory }}/Downloads/screenshots"
+#  - label: Save screenshots to Downloads/screenshots
+#    domain: com.apple.screencapture
+#    key: location
+#    type: string
+#    value: "{{ all_home_directory }}/Downloads/screenshots"
 
-  - label: Save screenshots in PNG format (other options -> BMP, GIF, JPG, PDF, TIFF)
-    domain: com.apple.screencapture
-    key: type
-    type: string
-    value: png
+#  - label: Save screenshots in PNG format (other options -> BMP, GIF, JPG, PDF, TIFF)
+#    domain: com.apple.screencapture
+#    key: type
+#    type: string
+#    value: png
 
   - label: Disable shadow in screenshots
     domain: com.apple.screencapture

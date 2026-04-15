@@ -22,8 +22,8 @@ setopt HIST_FIND_NO_DUPS
 HISTFILESIZE=
 HISTSIZE=
 
-# Disabled plugins: poetry
-plugins=(lp asdf brew copyfile direnv docker git git-extras history mvn npm macos vagrant zsh-autosuggestions zsh-syntax-highlighting)
+# Disabled plugins: asdf poetry
+plugins=(lp brew copyfile direnv docker eza fzf gh git git-extras history mise mvn npm macos uv vagrant zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -35,6 +35,8 @@ alias tg="terragrunt"
 alias kc="kubectl"
 alias k="kubectl"
 alias git='LANG=en_GB git'
+alias lzg="lazygit"
+alias lzd="lazydocker"
 
 export EDITOR=VIM
 export REPOS_ELIGIBLE_FILTERS=.git

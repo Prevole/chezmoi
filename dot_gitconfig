@@ -74,6 +74,7 @@
   path = ~/.gitconf/pro/.gitconfig
 [credential]
 	helper = 
+	helper = osxkeychain
 	helper = /usr/local/share/gcm-core/git-credential-manager
 [credential "https://dev.azure.com"]
 	useHttpPath = true
