@@ -4,7 +4,7 @@ tap "microsoft/git"
 cask "font-hack-nerd-font"
 cask "font-source-code-pro"
 
-brew "ansible"
+# brew "ansible"
 # brew "asciinema"
 brew "azure-cli"
 brew "bat"
