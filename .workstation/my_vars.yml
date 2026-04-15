@@ -1,15 +1,3 @@
-## Install additional applications
-#my_applications:
-##  - gpg-suite-no-mail
-##  - skitch <- No more available from Evernote website
-##  - balenaetcher
-##  - inkscape
-##  - raspberry-pi-imager
-##  - sublime-text
-##  - visual-studio-code
-##  - typora
-##  - vlc
-
 ## Clone default git repositories
 #my_repositories:
 #  - dest: mo

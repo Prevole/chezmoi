@@ -52,3 +52,14 @@ cask "macfuse"
 cask "obsidian"
 cask "rancher"
 cask "rectangle"
+
+## Previously installed applications
+# cask "gpg-suite-no-mail"
+# case "skitch" <- No more available from Evenote website
+# cask "balenaetcher"
+# cask "inkscape"
+# cask "raspberry-pi-imager"
+# cask "sublime-text"
+# cask "visual-studio-code"
+# cask "typora"
+# cask "vlc"
