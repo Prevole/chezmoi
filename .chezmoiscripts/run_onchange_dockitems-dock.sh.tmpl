@@ -4,12 +4,16 @@ set -euo pipefail
 # dconf.ini hash: {{ include "dockitems" | sha256sum }}
 DOCK_ITEMS_FILE={{ joinPath .chezmoi.sourceDir "dockitems" | quote }}
 
-dockutil --remove all
+echo "Clearing existing Dock items..."
+dockutil --remove all --no-restart
 
 while IFS= read -r app_path || [[ -n "$app_path" ]]; do
   [[ -z "$app_path" ]] && continue
   [[ -d "$app_path" ]] || continue
-  dockutil --add "$app_path"
+
+  dockutil --add "$app_path" --no-restart
 done < "$DOCK_ITEMS_FILE"
 
-dockutil --add "${HOME}/Downloads" --view fan --display folder --before "Trash"
+dockutil --add "${HOME}/Downloads" --view fan --display folder --no-restart
+
+killall Dock || true
