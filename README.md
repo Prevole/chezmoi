@@ -1,1 +1,180 @@
-# My configuration files
+# Dotfiles
+
+Personal macOS dotfiles managed with [chezmoi](https://www.chezmoi.io/).
+
+## Purpose
+
+This repository centralizes the configuration of a macOS development environment. It automates the setup of a new machine from scratch: shell, tools, applications, macOS system preferences, Git repositories, and Dock layout. The goal is to be able to reproduce a fully operational environment with minimal manual steps.
+
+---
+
+## Repository Structure
+
+### `scripts/`
+
+Standalone scripts meant to be run manually, outside of chezmoi.
+
+- **`mac-setup.sh`** — Bootstrap script for setting up a brand new machine. Installs Homebrew, sets up SSH, installs all applications and CLI tools from the Brewfile, and initializes chezmoi. Run this first on a fresh machine.
+
+### `.chezmoidata/`
+
+YAML data files that feed chezmoi templates. Centralizes configuration data so scripts and templates stay logic-only.
+
+- **`git.yaml`** — Defines the root directory for repositories and the list of repositories to clone, organized by category.
+- **`dock.yaml`** — Defines the list of applications to pin to the macOS Dock.
+
+### `.chezmoiscripts/`
+
+Scripts automatically executed by chezmoi on `chezmoi apply`.
+
+- **`run_once_before_01-setup-zsh.sh`** — Installs Zsh if not already present.
+- **`run_once_before_02-setup-oh-my-zsh.sh`** — Installs Oh My Zsh if not already present.
+- **`run_once_osx-*.sh`** — One-time scripts that apply macOS system preferences (Finder, keyboard, trackpad, display, Dock, Mission Control, security, screenshots, desktop, hot corners, Safari, Mail, Activity Monitor, TextEdit, Control Center, printing, Terminal, software update).
+- **`run_osx-99-always-macosx-restart-processes-if-required.sh`** — Always runs on apply to restart macOS processes that may need it after preference changes.
+- **`run_onchange_clone-repositories.rb.tmpl`** — Clones Git repositories defined in `.chezmoidata/git.yaml`. Re-runs automatically whenever `git.yaml` changes.
+- **`run_onchange_dockitems-dock.sh.tmpl`** — Configures the macOS Dock using `dockutil` based on `.chezmoidata/dock.yaml`. Re-runs automatically whenever `dock.yaml` changes.
+
+### `.chezmoiexternal.toml`
+
+Declares external resources that chezmoi fetches and manages automatically:
+
+- **Oh My Zsh plugins** — `zsh-autosuggestions`, `zsh-syntax-highlighting` (refreshed weekly).
+- **Oh My Zsh theme** — `powerlevel10k` (refreshed weekly).
+- **Fonts** — Powerlevel10k fonts and Source Code Pro, installed directly into `~/Library/Fonts`.
+
+### `dot_homebrew/Brewfile`
+
+Declares all CLI tools and macOS applications to install via Homebrew. Managed by `brew bundle`.
+
+### Other dotfiles
+
+| File | Target | Description |
+|---|---|---|
+| `dot_zshrc` | `~/.zshrc` | Zsh configuration |
+| `dot_p10k.zsh` | `~/.p10k.zsh` | Powerlevel10k prompt configuration |
+| `dot_gitconfig` | `~/.gitconfig` | Git global configuration |
+| `dot_gitignore` | `~/.gitignore` | Git global ignore rules |
+| `dot_vimrc` | `~/.vimrc` | Vim configuration |
+| `dot_ackrc` | `~/.ackrc` | ack search tool configuration |
+| `dot_ssh/` | `~/.ssh/` | SSH configuration |
+| `dot_config/` | `~/.config/` | XDG config directory |
+| `dot_m2/` | `~/.m2/` | Maven configuration |
+| `dot_gitconf/` | `~/.gitconf/` | Additional Git configuration |
+| `dot_media-archiver/` | `~/.media-archiver/` | Media archiver configuration |
+| `private_dot_npmrc.tmpl` | `~/.npmrc` | npm configuration (private, templated) |
+| `private_Library/` | `~/Library/` | macOS Library files (private) |
+
+---
+
+## How to Add a CLI Tool or Application
+
+To find the correct formula or cask name: `brew search "tool-name"`.
+
+### From Scratch (during initial machine setup)
+
+At this stage chezmoi is not yet applied, so edit the Brewfile directly and let the bootstrap script handle the installation.
+
+1. Open `dot_homebrew/Brewfile` in this repository.
+2. Add a `brew "tool-name"` line (CLI tool) or a `cask "app-name"` line (macOS application).
+3. The `mac-setup.sh` bootstrap script will install everything from the Brewfile when it runs.
+
+### Day-to-Day (chezmoi already applied)
+
+Use chezmoi to edit the Brewfile so changes are tracked, then install immediately.
+
+**CLI tool:**
+```sh
+chezmoi edit ~/.homebrew/Brewfile  # add: brew "tool-name"
+brew tool-name
+chezmoi apply
+```
+
+**macOS application:**
+```sh
+chezmoi edit ~/.homebrew/Brewfile  # add: cask "app-name"
+brew --cask app-name
+chezmoi apply
+```
+
+### Pin an application to the Dock
+
+1. Open `.chezmoidata/dock.yaml`.
+2. Add the full application path under `dock.apps`:
+   ```yaml
+   dock:
+     apps:
+       - /Applications/MyApp.app
+   ```
+3. Run `chezmoi apply` — the Dock script will re-run automatically since the file has changed.
+
+---
+
+## How to Add a Git Repository to Auto-Clone
+
+1. Open `.chezmoidata/git.yaml`.
+2. Add the repository under the appropriate category (or create a new one):
+   ```yaml
+   git:
+     root: ~/Documents/repositories
+     repositories:
+       my-category:
+         - name: my-repo
+           url: git@github.com:username/my-repo.git
+   ```
+3. Run `chezmoi apply` — the clone script will re-run automatically since the file has changed.
+
+Repositories are cloned into `<root>/<category>/<name>`. Already existing directories are skipped.
+
+---
+
+## Setting Up a New Machine from Scratch
+
+### 1. Install Xcode Command Line Tools
+
+```sh
+xcode-select --install
+```
+
+### 2. Clone this repository
+
+Clone over HTTPS into `/tmp` (SSH key is not yet set up at this point, and the directory will be cleaned up automatically on next restart):
+
+```sh
+git clone https://github.com/<your-username>/<this-repo>.git /tmp/chezmoi
+```
+
+### 3. Run the bootstrap script
+
+```sh
+/tmp/chezmoi/scripts/mac-setup.sh
+```
+
+This will:
+- Install Homebrew
+- Set up the `~/.ssh` directory and generate an SSH key
+- Pause and ask you to add the public key to your GitHub account
+- Create `~/Documents/repositories`
+- Install all CLI tools and applications from the Brewfile
+- Pause and ask you to set up 1Password
+- Initialize chezmoi with your dotfiles repository
+
+### 4. Set up 1Password
+
+When the script pauses for 1Password:
+1. Open 1Password and sign in to your account.
+2. Set up the CLI integration: **Settings → Developer → Connect with CLI**.
+3. Press Enter in the terminal to continue.
+
+### 5. Apply dotfiles with chezmoi
+
+If chezmoi was not initialized automatically by the script:
+
+```sh
+chezmoi init --apply git@github.com:<your-username>/<this-repo>.git
+```
+
+This will apply all dotfiles, run macOS preference scripts, clone your Git repositories, and configure your Dock.
+
+### 6. Restart
+
+Restart your machine to ensure all macOS preferences are fully applied.

@@ -23,7 +23,7 @@ if [ ! -f ~/.ssh/id_rsa ]; then
   echo "SSH key generated. Please add the following public key to your GitHub account:"
   cat ~/.ssh/id_rsa.pub
 
-  pause "Press Enter after adding the SSH key to GitHub..."
+  read -r -p "Press Enter after adding the SSH key to GitHub..."
 else
   echo "SSH key already exists. Skip."
 fi
@@ -36,9 +36,9 @@ else
 fi
 
 echo "Installing applications and tools from Brewfile..."
-brew bundle install -g --file=../dot_homebrew/Brewfile
+brew bundle install -g --file="$(dirname "$0")/../dot_homebrew/Brewfile"
 
-pause "Please log in to 1Password and set up your vaults before proceeding. Press Enter to continue after you're done..."
+read -r -p "Please log in to 1Password and set up your vaults before proceeding. Press Enter to continue after you're done..."
 
 if [ ! -d ~/.local/share/chezmoi ]; then
   echo "Chezmoi not found. Initializing chezmoi with your dotfiles repository..."
