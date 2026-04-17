@@ -109,6 +109,38 @@ chezmoi apply
 
 ---
 
+## Runtime Tool Management (mise)
+
+Language runtimes and development tools (Java, Node.js, Python, Maven, Terraform, Terragrunt, etc.) are managed by [mise](https://mise.jdx.dev/), not Homebrew.
+
+Global versions are defined in `dot_config/mise/config.toml`, which maps to `~/.config/mise/config.toml` and is tracked by chezmoi:
+
+```toml
+[tools]
+java = "temurin"
+maven = "latest"
+node = "latest"
+python = "latest"
+terraform = "latest"
+terragrunt = "latest"
+```
+
+### Adding or changing a tool version
+
+```sh
+chezmoi edit ~/.config/mise/config.toml  # add or update the tool entry
+mise install                              # install the new version(s)
+chezmoi apply
+```
+
+To find available versions for a tool: `mise ls-remote <tool>`.
+
+### Per-project overrides
+
+Versions can be overridden per project by adding a `.mise.toml` (or `.tool-versions`) file at the root of the project. These files are not managed by this repository.
+
+---
+
 ## How to Add a Git Repository to Auto-Clone
 
 1. Open `.chezmoidata/git.yaml`.
