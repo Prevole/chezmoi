@@ -175,6 +175,19 @@ Clone over HTTPS into `/tmp` (SSH key is not yet set up at this point, and the d
 git clone https://github.com/<your-username>/<this-repo>.git /tmp/chezmoi
 ```
 
+> **GitHub EMU (Enterprise Managed Users)**
+>
+> If your GitHub account is managed by your organization (SSO/Azure AD), you cannot use personal credentials or GitHub Credential Manager before they are installed. Use a Personal Access Token (PAT) instead:
+>
+> 1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**.
+> 2. Generate a new token with the `repo` scope.
+> 3. If your organization enforces SSO, click **Configure SSO** next to the token and authorize it for your organization.
+> 4. Clone using the token directly in the URL:
+>    ```sh
+>    git clone https://<your-username>:<your-pat>@github.com/<your-username>/<this-repo>.git /tmp/chezmoi
+>    ```
+>    The token is only needed for this initial clone. Once the bootstrap script has run and GitHub Credential Manager is installed, subsequent Git operations will use it instead.
+
 ### 3. Run the bootstrap script
 
 ```sh

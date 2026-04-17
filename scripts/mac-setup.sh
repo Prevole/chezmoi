@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 if ! command -v brew &> /dev/null; then
   echo "Homebrew not found. Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 else
   echo "Homebrew already installed. Skip."
 fi
@@ -22,6 +23,12 @@ if [ ! -f ~/.ssh/id_rsa ]; then
 
   echo "SSH key generated. Please add the following public key to your GitHub account:"
   cat ~/.ssh/id_rsa.pub
+
+  echo ""
+  echo "IMPORTANT: If your GitHub account is managed by your organization (EMU/SSO),"
+  echo "you must also authorize this SSH key for SSO on each required organization:"
+  echo "  GitHub -> Settings -> SSH and GPG keys -> find this key -> Configure SSO"
+  echo ""
 
   read -r -p "Press Enter after adding the SSH key to GitHub..."
 else
