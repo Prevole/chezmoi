@@ -1,4 +1,3 @@
-tap "homebrew/services"
 tap "microsoft/git"
 
 cask "font-hack-nerd-font"
@@ -14,6 +13,7 @@ brew "colordiff"
 brew "curl"
 brew "diff-so-fancy"
 brew "direnv"
+brew "dockutil"
 brew "eza"
 brew "fastfetch"
 brew "fd"
