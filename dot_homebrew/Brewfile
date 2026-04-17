@@ -1,4 +1,3 @@
-tap "homebrew/services"
 tap "microsoft/git"
 
 cask "font-hack-nerd-font"
