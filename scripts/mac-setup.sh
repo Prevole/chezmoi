@@ -60,3 +60,12 @@ else
   echo "Chezmoi already initialized. Skip."
 fi
 
+echo ""
+read -r -p "Setup complete. Restart now? [y/N] " answer
+if [[ "${answer}" =~ ^[Yy]$ ]]; then
+  echo "Restarting..."
+  sudo shutdown -r now
+else
+  echo "Restart skipped. Please restart your machine manually to apply all changes."
+fi
+
