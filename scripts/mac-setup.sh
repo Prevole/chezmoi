@@ -49,7 +49,7 @@ else
 fi
 
 echo "Installing applications and tools from Brewfile..."
-brew bundle install -g --file="$(dirname "$0")/../dot_homebrew/Brewfile"
+brew bundle install --file="$(dirname "$0")/../dot_homebrew/Brewfile"
 
 read -r -p "Please log in to 1Password and set up your vaults before proceeding. Press Enter to continue after you're done..."
 
