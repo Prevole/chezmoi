@@ -1,18 +1,14 @@
 #!/usr/bin/env zsh
 set -euo pipefail
 
-# dconf.ini hash: {{ include "dockitems" | sha256sum }}
-DOCK_ITEMS_FILE={{ joinPath .chezmoi.sourceDir "dockitems" | quote }}
+# dock.yaml hash: {{ include ".chezmoidata/dock.yaml" | sha256sum }}
 
 echo "Clearing existing Dock items..."
 dockutil --remove all --no-restart
 
-while IFS= read -r app_path || [[ -n "$app_path" ]]; do
-  [[ -z "$app_path" ]] && continue
-  [[ -d "$app_path" ]] || continue
-
-  dockutil --add "$app_path" --no-restart
-done < "$DOCK_ITEMS_FILE"
+{{- range .dock.apps }}
+dockutil --add {{ . | quote }} --no-restart
+{{- end }}
 
 dockutil --add "${HOME}/Downloads" --view fan --display folder --no-restart
 

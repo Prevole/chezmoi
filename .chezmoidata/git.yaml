@@ -1,0 +1,21 @@
+git:
+  root: ~/Documents/repositories
+
+  repositories:
+    github-perso:
+      - name: chezmoi-private
+        url: git@github.com:Prevole/chezmoi
+
+    mo:
+      - name: ds-data-mesh-data-faker
+        url: git@github.com:REDACTED/ds-data-mesh-data-faker.git
+      - name: terra-confluent-platform
+        url: git@github.com:REDACTED/terra-confluent-platform.git
+      - name: cloud-deploy
+        url: git@github.com:REDACTED/cloud-deploy.git
+      - name: data-core
+        url: git@github.com:REDACTED/data-core.git
+
+    REDACTED-archives:
+      - name: wellness-insights
+        url: git@github.com:REDACTED-archives/wellness-insights.git
