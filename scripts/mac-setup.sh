@@ -8,6 +8,12 @@ else
   echo "Homebrew already installed. Skip."
 fi
 
+if ! command -v brew &> /dev/null; then
+  echo "Homebrew not in PATH. Setting up brew environment..."
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+  echo "Homebrew environment ready."
+fi
+
 brew upgrade
 
 if [ ! -d ~/.ssh ]; then
