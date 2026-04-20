@@ -25,19 +25,26 @@ echo "Current computer name : $CURRENT_NAME"
 echo "Proposed computer name: $COMPUTER_NAME"
 echo ""
 
-read -r -p "Rename this machine to '$COMPUTER_NAME'? [y/N] " rename_answer
-
-if [[ "${rename_answer}" =~ ^[Yy]$ ]]; then
-  echo "Renaming machine..."
-
-  scutil --set ComputerName "$COMPUTER_NAME"
-  scutil --set LocalHostName "$COMPUTER_NAME"
-  scutil --set HostName "$COMPUTER_NAME"
-  sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$COMPUTER_NAME"
-
-  echo "Machine renamed to $COMPUTER_NAME."
+if [[ "$CURRENT_NAME" == "$COMPUTER_NAME" ]]; then
+  echo "Machine name is already correct. Skip."
 else
-  echo "Machine rename skipped. Keeping current name: $CURRENT_NAME."
+  read -r -p "Rename this machine to '$COMPUTER_NAME'? [y/N] " rename_answer
+
+  if [[ "${rename_answer}" =~ ^[Yy]$ ]]; then
+    echo "Renaming machine..."
+
+    # Authenticate once; the sudo ticket is reused for subsequent calls.
+    sudo -v
+
+    sudo scutil --set ComputerName "$COMPUTER_NAME"
+    sudo scutil --set LocalHostName "$COMPUTER_NAME"
+    sudo scutil --set HostName "$COMPUTER_NAME"
+    sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$COMPUTER_NAME"
+
+    echo "Machine renamed to $COMPUTER_NAME."
+  else
+    echo "Machine rename skipped. Keeping current name: $CURRENT_NAME."
+  fi
 fi
 
 echo "Disabling startup sound..."
@@ -53,13 +60,22 @@ else
   echo "SSH directory already exists. Skip."
 fi
 
-if [ ! -f ~/.ssh/id_rsa ]; then
+if [ ! -f ~/.ssh/id_ed25519 ]; then
   echo "SSH key not found. Generating SSH key..."
-  ssh-keygen -t rsa -b 4096 -C "$(whoami)@$(hostname)" -f ~/.ssh/id_rsa -N ""
+  ssh-keygen -t ed25519 -C "$(whoami)@$(hostname)" -f ~/.ssh/id_ed25519 -N ""
 
-  echo "SSH key generated. Please add the following public key to your GitHub account:"
-  cat ~/.ssh/id_rsa.pub
+  SSH_KEY_TITLE="$(whoami) - $(hostname) - ED25519"
 
+  echo ""
+  echo "================================================================"
+  echo " SSH public key generated"
+  echo " Use this title in GitHub: $SSH_KEY_TITLE"
+  echo "================================================================"
+  cat ~/.ssh/id_ed25519.pub
+  echo "================================================================"
+  echo ""
+  cat ~/.ssh/id_ed25519.pub | pbcopy
+  echo "The public key has been copied to your clipboard."
   echo ""
   echo "IMPORTANT: If your GitHub account is managed by your organization (EMU/SSO),"
   echo "you must also authorize this SSH key for SSO on each required organization:"
@@ -76,6 +92,15 @@ if [ ! -d ~/Documents/repositories ]; then
   mkdir -p ~/Documents/repositories
 else
   echo "Repositories directory already exists. Skip."
+fi
+
+# Install chezmoi early so we can use execute-template to render the Brewfile
+# before running brew bundle. Same chicken-and-egg problem as 1Password.
+if ! command -v chezmoi &> /dev/null; then
+  echo "Installing chezmoi (required to render Brewfile template)..."
+  brew install chezmoi
+else
+  echo "chezmoi already installed. Skip."
 fi
 
 echo ""
@@ -95,11 +120,20 @@ if [[ "${full_setup_answer}" =~ ^[Yy]$ ]]; then
 fi
 echo "Full setup: $FULL_SETUP"
 
+# Write the chezmoi config early so that execute-template picks up setupType
+# and fullSetup when rendering the Brewfile (and the agent.toml) below.
+mkdir -p ~/.config/chezmoi
+cat > ~/.config/chezmoi/chezmoi.yaml <<EOF
+data:
+  setupType: "${SETUP_TYPE}"
+  fullSetup: ${FULL_SETUP}
+EOF
+
 BREWFILE_TMPL="$(dirname "$0")/../dot_homebrew/Brewfile.tmpl"
 BREWFILE_RENDERED="/tmp/Brewfile"
 
 echo "Rendering Brewfile for setup type '$SETUP_TYPE' (fullSetup: $FULL_SETUP)..."
-chezmoi execute-template --data "{\"setupType\": \"$SETUP_TYPE\", \"fullSetup\": $FULL_SETUP}" < "$BREWFILE_TMPL" > "$BREWFILE_RENDERED"
+chezmoi execute-template < "$BREWFILE_TMPL" > "$BREWFILE_RENDERED"
 
 echo "Installing applications and tools from Brewfile..."
 brew bundle install --file="$BREWFILE_RENDERED"
@@ -162,7 +196,7 @@ if ! op item get "$SSH_KEY_TITLE" --vault "$HOSTNAME" &>/dev/null; then
     --category "SSH Key" \
     --vault "$HOSTNAME" \
     --title "$SSH_KEY_TITLE" \
-    "private key[private key]=~/.ssh/id_rsa"
+    "private key[private key]=~/.ssh/id_ed25519"
 
   echo "SSH key imported as '$SSH_KEY_TITLE'."
 else
@@ -171,30 +205,20 @@ fi
 
 if [ ! -d ~/.local/share/chezmoi ]; then
   echo "Chezmoi not found. Initializing chezmoi with your dotfiles repository..."
-
-  # Pre-populate the chezmoi config so that promptChoiceOnce does not ask
-  # for setupType and fullSetup again during chezmoi init --apply.
-  mkdir -p ~/.config/chezmoi
-  cat > ~/.config/chezmoi/chezmoi.yaml <<EOF
-data:
-  setupType: "${SETUP_TYPE}"
-  fullSetup: ${FULL_SETUP}
-EOF
-
   chezmoi init --apply 'git@github.com:REDACTED_REDACTED/env.git'
 else
   echo "Chezmoi already initialized. Skip."
 fi
 
-if [ -f ~/.ssh/id_rsa ]; then
+if [ -f ~/.ssh/id_ed25519 ]; then
   echo ""
-  echo "The SSH key ~/.ssh/id_rsa is now stored in 1Password and served by the SSH agent."
+  echo "The SSH key ~/.ssh/id_ed25519 is now stored in 1Password and served by the SSH agent."
   echo "The local key file is no longer needed."
 
-  read -r -p "Delete ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub? [y/N] " delete_answer
+  read -r -p "Delete ~/.ssh/id_ed25519 and ~/.ssh/id_ed25519.pub? [y/N] " delete_answer
 
   if [[ "${delete_answer}" =~ ^[Yy]$ ]]; then
-    rm -f ~/.ssh/id_rsa ~/.ssh/id_rsa.pub
+    rm -f ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub
     echo "Local SSH key files deleted."
   else
     echo "Local SSH key files kept."
