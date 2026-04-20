@@ -78,8 +78,31 @@ else
   echo "Repositories directory already exists. Skip."
 fi
 
+echo ""
+read -r -p "Setup type [personal/work]: " SETUP_TYPE
+
+while [[ "$SETUP_TYPE" != "personal" && "$SETUP_TYPE" != "work" ]]; do
+  echo "Invalid choice. Please enter 'personal' or 'work'."
+  read -r -p "Setup type [personal/work]: " SETUP_TYPE
+done
+
+echo "Setup type: $SETUP_TYPE"
+
+FULL_SETUP=false
+read -r -p "Full setup (install all tools for this setup type)? [y/N]: " full_setup_answer
+if [[ "${full_setup_answer}" =~ ^[Yy]$ ]]; then
+  FULL_SETUP=true
+fi
+echo "Full setup: $FULL_SETUP"
+
+BREWFILE_TMPL="$(dirname "$0")/../dot_homebrew/Brewfile.tmpl"
+BREWFILE_RENDERED="/tmp/Brewfile"
+
+echo "Rendering Brewfile for setup type '$SETUP_TYPE' (fullSetup: $FULL_SETUP)..."
+chezmoi execute-template --data "{\"setupType\": \"$SETUP_TYPE\", \"fullSetup\": $FULL_SETUP}" < "$BREWFILE_TMPL" > "$BREWFILE_RENDERED"
+
 echo "Installing applications and tools from Brewfile..."
-brew bundle install --file="$(dirname "$0")/../dot_homebrew/Brewfile"
+brew bundle install --file="$BREWFILE_RENDERED"
 
 # ---------------------------------------------------------------------------
 # One-shot bootstrap: copy the 1Password SSH agent config before chezmoi runs.
@@ -148,6 +171,16 @@ fi
 
 if [ ! -d ~/.local/share/chezmoi ]; then
   echo "Chezmoi not found. Initializing chezmoi with your dotfiles repository..."
+
+  # Pre-populate the chezmoi config so that promptChoiceOnce does not ask
+  # for setupType and fullSetup again during chezmoi init --apply.
+  mkdir -p ~/.config/chezmoi
+  cat > ~/.config/chezmoi/chezmoi.yaml <<EOF
+data:
+  setupType: "${SETUP_TYPE}"
+  fullSetup: ${FULL_SETUP}
+EOF
+
   chezmoi init --apply 'git@github.com:REDACTED_REDACTED/env.git'
 else
   echo "Chezmoi already initialized. Skip."
@@ -176,4 +209,3 @@ if [[ "${answer}" =~ ^[Yy]$ ]]; then
 else
   echo "Restart skipped. Please restart your machine manually to apply all changes."
 fi
-

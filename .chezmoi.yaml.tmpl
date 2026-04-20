@@ -1,6 +1,11 @@
+{{- $setupType := promptChoiceOnce . "setupType" "Setup type" (list "personal" "work") }}
+{{- $fullSetup := promptChoiceOnce . "fullSetup" "Full setup (install all tools for this setup type)?" (list "yes" "no") | eq "yes" }}
+
 git:
   autoCommit: true
   autoPush: true
 
 data:
-  email: prevole@REDACTED.ch
+  setupType: {{ $setupType }}
+  fullSetup: {{ $fullSetup }}
+  email: {{ if eq $setupType "work" }}prevole@REDACTED.ch{{ else }}prevole@prevole.ch{{ end }}

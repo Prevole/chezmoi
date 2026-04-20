@@ -38,7 +38,7 @@
   branch = false
 
 [core]
-  excludesfile = /Users/Prevole/.gitignore
+  excludesfile = {{ .chezmoi.homeDir }}/.gitignore
 
 [pull]
 	rebase = true
@@ -52,29 +52,27 @@
 	process = git-lfs filter-process
 	required = true
 
-[credential "https://git.intern.REDACTED.net"]
-	provider = generic
-[user]
-	name = Prevole
-	email = prevole@REDACTED.ch
-
+{{ if eq .setupType "work" }}
 [includeIf "gitdir:~/Documents/repositories/github-perso/"]
-  path = ~/.gitconf/perso/.gitconfig
+  path = ~/.gitconf/perso.config
 
 [includeIf "gitdir:~/Documents/repositories/mo/"]
-  path = ~/.gitconf/pro/.gitconfig
+  path = ~/.gitconf/pro.config
 
 [includeIf "gitdir:~/Documents/repositories/private/"]
-  path = ~/.gitconf/pro/.gitconfig
+  path = ~/.gitconf/pro.config
 
 [includeIf "gitdir:~/Documents/repositories/github/"]
-  path = ~/.gitconf/pro/.gitconfig
+  path = ~/.gitconf/pro.config
 
 [includeIf "gitdir:~/.local/share/chezmoi/"]
-  path = ~/.gitconf/pro/.gitconfig
-[credential]
-	helper = 
-	helper = osxkeychain
-	helper = /usr/local/share/gcm-core/git-credential-manager
-[credential "https://dev.azure.com"]
-	useHttpPath = true
+  path = ~/.gitconf/pro.config
+{{ end -}}
+
+{{ if eq .setupType "personal" }}
+[includeIf "gitdir:~/Documents/repositories/"]
+  path = ~/.gitconf/perso.config
+
+[includeIf "gitdir:~/.local/share/chezmoi/"]
+  path = ~/.gitconf/perso.config
+{{ end -}}

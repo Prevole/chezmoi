@@ -1,39 +1,128 @@
-# Function to add new files
+# ---------------------------------------------------------------------------
+# Cache management — rootdirs extracted from ~/.gitconfig includeIf entries.
+# Cache is invalidated when ~/.gitconfig is newer than the cache file.
+# ---------------------------------------------------------------------------
+
+_lp_cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/lp/rootdirs"
+
+_lp_build_rootdirs_cache() {
+  local cache_file="$_lp_cache_file"
+  local gitconfig="$HOME/.gitconfig"
+
+  # Return cached value if still valid
+  if [[ -f "$cache_file" && "$cache_file" -nt "$gitconfig" ]]; then
+    cat "$cache_file"
+    return
+  fi
+
+  # Parse gitdir entries from includeIf blocks
+  local -a rootdirs
+  local line dir
+
+  while IFS= read -r line; do
+    if [[ "$line" =~ 'includeIf "gitdir:(.+)"' ]]; then
+      dir="${match[1]}"
+      # Expand ~ and strip trailing slash
+      dir="${dir/#\~/$HOME}"
+      dir="${dir%/}"
+      rootdirs+=("$dir")
+    fi
+  done < "$gitconfig"
+
+  # Write cache
+  mkdir -p "$(dirname "$cache_file")"
+  printf '%s\n' "${rootdirs[@]}" > "$cache_file"
+
+  printf '%s\n' "${rootdirs[@]}"
+}
+
+# Force rebuild the rootdirs cache
+function lp_cache_refresh() {
+  rm -f "$_lp_cache_file"
+  _lp_build_rootdirs_cache > /dev/null
+  echo "lp: rootdirs cache refreshed."
+}
+
+# ---------------------------------------------------------------------------
+# Repo lookup — level 1 (rootdir/repo_name) then level 2 (rootdir/*/repo_name)
+# ---------------------------------------------------------------------------
+
+_lp_find_repos() {
+  local query="$1"
+  local -a rootdirs matches
+  local rootdir candidate
+
+  while IFS= read -r rootdir; do
+    [[ -z "$rootdir" ]] && continue
+
+    # Level 1: rootdir/repo_name/.git
+    candidate="$rootdir/$query"
+    if [[ -d "$candidate/.git" ]]; then
+      matches+=("$candidate")
+      continue
+    fi
+
+    # Level 2 (fallback): rootdir/*/repo_name/.git
+    for candidate in "$rootdir"/*/; do
+      candidate="${candidate%/}/$query"
+      if [[ -d "$candidate/.git" ]]; then
+        matches+=("$candidate")
+      fi
+    done
+  done <<< "$(_lp_build_rootdirs_cache)"
+
+  # Deduplicate
+  print -l "${(u)matches[@]}"
+}
+
+# ---------------------------------------------------------------------------
+# rep / orep — navigate or open a repository
+# ---------------------------------------------------------------------------
+
 function rep() {
   _internal_rep "$1" "cd"
 }
 
 function orep() {
-	_internal_rep "$1" "open"
+  _internal_rep "$1" "open"
 }
 
 _internal_rep() {
-	local base_repo scm_dir
+  local query="$1"
+  local action="$2"
+  local -a matches
+  local chosen
 
-	if [ "$REPOS_BASEDIRS" ]; then
-		for base_repo in $(echo "$REPOS_BASEDIRS" | tr ":" "\n"); do
-			for scm_dir in $( echo "$REPOS_ELIGIBLE_FILTERS" | tr ":" "\n"); do
-				if [ -d "$base_repo/$1/$scm_dir" ]; then
-					if [ "$2" = "open" ]; then
-						open "$base_repo/$1"
-					else
-						cd "$base_repo/$1"
-					fi
-					return 0
-				fi
-			done
-		done
-	fi
+  matches=("${(@f)$(_lp_find_repos "$query")}")
+  matches=("${matches[@]:#}")  # remove empty entries
 
-	echo "Repository $1 not found in ($(echo $REPOS_BASEDIRS | sed 's/:/, /'))"
+  if [[ ${#matches[@]} -eq 0 ]]; then
+    echo "Repository '$query' not found."
+    return 1
+  elif [[ ${#matches[@]} -eq 1 ]]; then
+    chosen="${matches[1]}"
+  else
+    chosen=$(printf '%s\n' "${matches[@]}" | fzf --prompt="Multiple matches for '$query': " --height=10)
+    [[ -z "$chosen" ]] && return 0
+  fi
+
+  if [[ "$action" == "open" ]]; then
+    open "$chosen"
+  else
+    cd "$chosen"
+  fi
 }
 
-function fg () {
+# ---------------------------------------------------------------------------
+# Utility functions
+# ---------------------------------------------------------------------------
+
+function fg() {
   find . -name "$2" -exec grep -H "$1" {} \;
 }
 
 function eprof() {
-  vim ~/.zshrc
+  nvim ~/.zshrc
 }
 
 function sprof() {
@@ -47,73 +136,13 @@ function repos_pull() {
 
 function repos_stat() {
   echo "#############################################"
-  find . ! -path . -type d -maxdepth 1 -exec sh -c "echo \"Pull repo: {}\" | sed -E 's/\.\///g'; git -C {} s; echo \"#############################################\";" \;
-}
-
-function epass() {
-  idea ~/.ansible/secrets/all_$1.yaml
-}
-
-function epass_switch() {
-  sudo rm -f /etc/ansible/group_vars/all
-  sudo ln -s /Users/prevole/.ansible/secrets/all_$1.yaml /etc/ansible/group_vars/all
-}
-
-function which_space() {
-  cat /etc/ansible/group_vars/all | yq ".space" | tr '[:lower:]' '[:upper:]'
-}
-
-function azl() {
-  az logout
-  az login
-}
-
-function kcl() {
-  while getopts ":r:c:" flag; do
-    echo "Flag: $flag"
-
-    case "${flag}" in
-      r) REGION=$(echo -n "${OPTARG}" | tr '[:upper:]' '[:lower:]');;
-      c) CLUSTER=$(echo -n "${OPTARG}" | tr '[:upper:]' '[:lower:]');;
-    esac
-  done
-  
-  echo "Region: $REGION"
-  echo "Cluster: $CLUSTER"
-
-  if [[ -z "${REGION}" ]]; then
-    REGION="swn"
-  fi
-
-  if [[ -z "${CLUSTER}" ]]; then
-    CLUSTER="apps"
-  fi
-
-  ENV_RG=$(echo -n "${@:$OPTIND:1}" | tr '[:upper:]' '[:lower:]')
-  ENV_NAME=$(echo -n "${@:$OPTIND:1}" | tr '[:lower:]' '[:upper:]')
-
-  AKS="mo-${REGION}-${ENV_RG}-${CLUSTER}"
-
-  echo "Log in to ${ENV_NAME} - ${AKS}"
-
-  az account set --subscription "MO-${ENV_NAME}"
-  az aks get-credentials --resource-group "${AKS}-rg" --name "${AKS}-aks"
-
-  echo "Connected"
-}
-
-function acrl() {
-  az acr login -n moswncoremainregistrycr
-}
-
-function tgclean() {
-  find . -type d -name ".terraform" -prune -exec rm -rf {} \;  ; find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} \; ; find . -type f -name ".terraform.lock.hcl" -prune -exec rm -rf {} \;
+  find . ! -path . -type d -maxdepth 1 -exec sh -c "echo \"Stat repo: {}\" | sed -E 's/\.\///g'; git -C {} s; echo \"#############################################\";" \;
 }
 
 function update() {
   echo "Updating..."
 
-  echo "Updatating oh-my-zsh..."
+  echo "Updating oh-my-zsh..."
   omz update
 
   echo "Updating brew..."

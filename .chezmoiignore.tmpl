@@ -1,0 +1,10 @@
+README.md
+.workstation
+scripts
+doc
+
+{{- if ne .setupType "work" }}
+.gitconf/pro/.gitconfig
+.m2/settings.xml
+.oh-my-zsh/custom/plugins/lppro
+{{- end }}

@@ -45,13 +45,4 @@ Thumbs.db
 .env
 .envrc
 
-playbooks/**/*deployment.yaml
-roles/**/roles
-roles/service_openshift4/filter_plugins
-roles/service_openshift4/group_vars
-roles/**/filter_plugins
 .doc
-temppb*.yaml
-temppb*.yml
-
-vars/temp.groovy

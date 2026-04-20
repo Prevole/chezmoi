@@ -24,6 +24,7 @@ mark_restart_needed() {
 restart_all_flagged() {
   local flag service
 
+  setopt local_options null_glob
   for flag in "$MACOS_RESTART_FLAG_DIR"/*; do
     [[ -e "$flag" ]] || return 0
     service="${flag:t}"

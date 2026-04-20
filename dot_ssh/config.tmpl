@@ -1,0 +1,10 @@
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+Include ~/.ssh/1Password/config
+
+{{ if eq .setupType "work" }}
+Match Host github-perso User git
+  Hostname github.com
+{{ end -}}
+

@@ -23,7 +23,7 @@ HISTFILESIZE=
 HISTSIZE=
 
 # Disabled plugins: asdf poetry
-plugins=(lp brew copyfile direnv docker eza fzf gh git git-extras history mise mvn npm macos uv vagrant zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(lp brew copyfile direnv docker eza fzf gh git git-extras history mise mvn npm macos uv vagrant zsh-autosuggestions zsh-syntax-highlighting{{ if eq .setupType "work" }} lppro{{ end }})
 
 source $ZSH/oh-my-zsh.sh
 
@@ -38,18 +38,12 @@ alias git='LANG=en_GB git'
 alias lzg="lazygit"
 alias lzd="lazydocker"
 
-export EDITOR=VIM
-export REPOS_ELIGIBLE_FILTERS=.git
-export REPOS_BASEDIRS=:~/Documents/repositories/github:~/Documents/repositories/github-perso:~/Documents/repositories/private:~/Documents/repositories/mo:~/Documents/repositories/REDACTED
-export GITENV_REPO=~/Documents/repositories/private/env
-export GITENV_CONFIG=~/Documents/repositories/private/env/.gitenv.rb
+export EDITOR=nvim
 export GPG_TTY=$(tty)
 
 export no_proxy='*'
 
-# export ANSIBLE_CONFIG=~/.ansible/ansible.cfg
-
-source ~/.iterm2_shell_integration.zsh
+# source ~/.iterm2_shell_integration.zsh
 
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
@@ -58,10 +52,6 @@ export SETUPTOOLS_USE_DISTUTILS=stdlib
 
 # Add this to get JetBrains commands (idea, pycharm, ...)
 #export PATH="/Users/prevole/.local/bin:$PATH"
-
-#export PATH="/Applications/Rancher Desktop.app/Contents/Resources/resources/darwin/bin:$PATH"
-
-export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
 
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
 export PATH="/Users/Prevole/.rd/bin:$PATH"

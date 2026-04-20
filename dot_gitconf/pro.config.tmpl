@@ -1,6 +1,6 @@
 [user]
   name = Prevole
-  email = prevole@REDACTED.ch
+  email = {{ .email }}
   signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICO7tptY9xdDums+z2zZGZEicyhF9zrnPnby3nNyzBnx
 
 [gpg]
@@ -15,3 +15,10 @@
 [github]
   user = "REDACTED_REDACTED"
 
+[credential]
+	helper =
+	helper = osxkeychain
+	helper = /usr/local/share/gcm-core/git-credential-manager
+
+[credential "https://dev.azure.com"]
+	useHttpPath = true

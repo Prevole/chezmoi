@@ -109,6 +109,41 @@ chezmoi apply
 
 ---
 
+## Setup Type
+
+Two prompts are asked during both the bootstrap script and `chezmoi init` to configure the machine profile. The answers are stored in `~/.config/chezmoi/chezmoi.yaml` and remembered by `promptChoiceOnce` — they will not be asked again on subsequent `chezmoi apply` runs.
+
+### `setupType`
+
+Defines the primary purpose of the machine.
+
+| Value | Description |
+|---|---|
+| `personal` | Personal machine — work-specific tools and configs are excluded |
+| `work` | Work machine — work-specific tools (`work.Brewfile`, `pro.gitconfig`, `settings.xml`, etc.) are included |
+
+### `fullSetup`
+
+Available for both `personal` and `work` setups. When enabled, installs the additional tools defined in `full-setup.Brewfile`.
+
+| Value | Description |
+|---|---|
+| `yes` | Install all extra tools for this setup type |
+| `no` | Minimal setup — only the common Brewfile is installed |
+
+### What is conditionally deployed
+
+| File / tool | Condition |
+|---|---|
+| `~/.gitconf/pro/.gitconfig` | `setupType == work` |
+| `~/.m2/settings.xml` | `setupType == work` |
+| `~/.oh-my-zsh/custom/plugins/lppro` | `setupType == work` |
+| `zsh plugin: lppro` | `setupType == work` |
+| `work.Brewfile` contents | `setupType == work` |
+| `full-setup.Brewfile` contents | `fullSetup == true` (any setup type) |
+
+---
+
 ## Runtime Tool Management (mise)
 
 Language runtimes and development tools (Java, Node.js, Python, Maven, Terraform, Terragrunt, etc.) are managed by [mise](https://mise.jdx.dev/), not Homebrew.
@@ -198,8 +233,9 @@ This will:
 - Install Homebrew
 - Set up the `~/.ssh` directory and generate an SSH key
 - Pause and ask you to add the public key to your GitHub account
-- Create `~/Documents/repositories`
-- Install all CLI tools and applications from the Brewfile
+- Ask for the **setup type** (`personal` or `work`) — see [Setup Type](#setup-type) below
+- Ask for **full setup** (`y/N`) — see [Setup Type](#setup-type) below
+- Render and install all CLI tools and applications from the Brewfile
 - Pause and ask you to set up 1Password
 - Initialize chezmoi with your dotfiles repository
 
