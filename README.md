@@ -205,10 +205,53 @@ This will:
 
 ### 4. Set up 1Password
 
-When the script pauses for 1Password:
+When the script pauses for 1Password, complete the following steps **before** pressing Enter. The SSH agent config has already been copied by the script so that 1Password can pick it up immediately.
+
+#### Sign in and set up vaults
+
 1. Open 1Password and sign in to your account.
-2. Set up the CLI integration: **Settings → Developer → Connect with CLI**.
-3. Press Enter in the terminal to continue.
+2. Make sure your vaults are accessible.
+
+#### Configure Developer settings
+
+Go to **1Password → Settings → Developer** and configure exactly as shown below:
+
+![1Password Developer Settings](doc/1password-devsettings.png)
+
+| Setting | Value |
+|---|---|
+| Use the SSH Agent | ✅ enabled |
+| Ask approval for each new | `application and terminal session` |
+| Remember key approval | `until 1Password quits` |
+| Display key names when authorizing connections | ✅ enabled |
+| Generate SSH config file with bookmarked hosts | ✅ enabled |
+| Integrate with 1Password CLI | ✅ enabled |
+
+#### Restart 1Password
+
+After saving the Developer settings, **restart 1Password** so it reloads the SSH agent config that was copied by the script. Without this restart, the vault defined in `agent.toml` will not be taken into account.
+
+Once 1Password is back up and the SSH agent shows as **running**, press Enter in the terminal to continue.
+
+#### Create the machine vault and import the SSH key
+
+**Why this is necessary:** the `agent.toml` config points the 1Password SSH agent to a vault named after the machine hostname. For the SSH agent to serve the key to Git and GitHub, the vault must exist and the SSH key must be stored in it. Without this, `chezmoi init` and all subsequent SSH operations will fail.
+
+The setup script handles this automatically via the `op` CLI:
+- Signs in to 1Password CLI (`op signin`)
+- Creates a vault named `<hostname>` if it does not already exist
+- Imports `~/.ssh/id_rsa` as an SSH Key entry titled `<username> - <hostname> - ED25519`
+
+**Manual fallback** (if the automated step fails):
+
+1. Open 1Password and create a new vault named after your machine hostname:
+   ```sh
+   hostname  # to get the exact name to use
+   ```
+2. In the new vault, create a new item: **New Item → SSH Key**.
+3. Title it exactly: `<username> - <hostname> - ED25519`
+4. In the **Private Key** field, import `~/.ssh/id_rsa`.
+5. Save the item.
 
 ### 5. Apply dotfiles with chezmoi
 

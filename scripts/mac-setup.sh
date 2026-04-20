@@ -16,6 +16,36 @@ fi
 
 brew upgrade
 
+COMPUTER_NAME_SUFFIX=$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F \" '/IOPlatformSerialNumber/{print $(NF-1)}')
+COMPUTER_NAME="MAC$COMPUTER_NAME_SUFFIX"
+CURRENT_NAME=$(scutil --get ComputerName 2>/dev/null || echo "")
+
+echo ""
+echo "Current computer name : $CURRENT_NAME"
+echo "Proposed computer name: $COMPUTER_NAME"
+echo ""
+
+read -r -p "Rename this machine to '$COMPUTER_NAME'? [y/N] " rename_answer
+
+if [[ "${rename_answer}" =~ ^[Yy]$ ]]; then
+  echo "Renaming machine..."
+
+  scutil --set ComputerName "$COMPUTER_NAME"
+  scutil --set LocalHostName "$COMPUTER_NAME"
+  scutil --set HostName "$COMPUTER_NAME"
+  sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$COMPUTER_NAME"
+
+  echo "Machine renamed to $COMPUTER_NAME."
+else
+  echo "Machine rename skipped. Keeping current name: $CURRENT_NAME."
+fi
+
+echo "Disabling startup sound..."
+sudo nvram SystemAudioVolume=" "
+
+echo "Installing Rosetta 2..."
+softwareupdate --install-rosetta --agree-to-license
+
 if [ ! -d ~/.ssh ]; then
   echo "SSH directory not found. Creating SSH directory..."
   mkdir ~/.ssh
@@ -51,13 +81,91 @@ fi
 echo "Installing applications and tools from Brewfile..."
 brew bundle install --file="$(dirname "$0")/../dot_homebrew/Brewfile"
 
-read -r -p "Please log in to 1Password and set up your vaults before proceeding. Press Enter to continue after you're done..."
+# ---------------------------------------------------------------------------
+# One-shot bootstrap: copy the 1Password SSH agent config before chezmoi runs.
+# This is necessary to break the chicken-and-egg problem: chezmoi needs the
+# 1Password SSH agent to authenticate via SSH, but the agent config is normally
+# deployed by chezmoi itself. Copying it manually here ensures 1Password picks
+# it up as soon as it is set up, before chezmoi apply runs.
+# This file will be overwritten and properly managed by chezmoi afterwards.
+# ---------------------------------------------------------------------------
+AGENT_TOML_SRC="$(dirname "$0")/../dot_config/private_1Password/private_ssh/private_agent.toml.tmpl"
+AGENT_TOML_DST="${HOME}/.config/1Password/ssh/agent.toml"
+
+if [ ! -f "$AGENT_TOML_DST" ]; then
+  echo "Copying 1Password SSH agent config (one-shot bootstrap)..."
+  mkdir -p "$(dirname "$AGENT_TOML_DST")"
+  chezmoi execute-template < "$AGENT_TOML_SRC" > "$AGENT_TOML_DST"
+else
+  echo "1Password SSH agent config already exists. Skip."
+fi
+
+read -r -p "Please log in to 1Password and complete the setup before proceeding. Press Enter to continue after you're done..."
+
+echo "Restarting 1Password to ensure SSH agent and keys are properly loaded..."
+killall "1Password" 2>/dev/null || true
+
+sleep 2
+
+open -a "1Password"
+read -r -p "Press Enter once 1Password is back up and the SSH agent shows as running..."
+
+# ---------------------------------------------------------------------------
+# Create the machine vault in 1Password and import the SSH key.
+# This is required so that the 1Password SSH agent can serve the key to Git
+# and GitHub via SSH. The agent.toml config points to a vault named after the
+# machine hostname — if this vault or the key entry does not exist, chezmoi
+# init (and all subsequent SSH operations) will fail.
+# The vault and key entry are created automatically below via the op CLI.
+# If this step fails, refer to the README for the manual fallback procedure.
+# ---------------------------------------------------------------------------
+HOSTNAME=$(hostname)
+SSH_KEY_TITLE="$(whoami) - ${HOSTNAME} - ED25519"
+
+echo "Signing in to 1Password CLI..."
+eval "$(op signin)"
+
+if ! op vault get "$HOSTNAME" &>/dev/null; then
+  echo "Creating 1Password vault '$HOSTNAME'..."
+  op vault create "$HOSTNAME"
+else
+  echo "1Password vault '$HOSTNAME' already exists. Skip."
+fi
+
+if ! op item get "$SSH_KEY_TITLE" --vault "$HOSTNAME" &>/dev/null; then
+  echo "Importing SSH key into 1Password vault '$HOSTNAME'..."
+
+  op item create \
+    --category "SSH Key" \
+    --vault "$HOSTNAME" \
+    --title "$SSH_KEY_TITLE" \
+    "private key[private key]=~/.ssh/id_rsa"
+
+  echo "SSH key imported as '$SSH_KEY_TITLE'."
+else
+  echo "SSH key entry '$SSH_KEY_TITLE' already exists in vault '$HOSTNAME'. Skip."
+fi
 
 if [ ! -d ~/.local/share/chezmoi ]; then
   echo "Chezmoi not found. Initializing chezmoi with your dotfiles repository..."
   chezmoi init --apply 'git@github.com:REDACTED_REDACTED/env.git'
 else
   echo "Chezmoi already initialized. Skip."
+fi
+
+if [ -f ~/.ssh/id_rsa ]; then
+  echo ""
+  echo "The SSH key ~/.ssh/id_rsa is now stored in 1Password and served by the SSH agent."
+  echo "The local key file is no longer needed."
+
+  read -r -p "Delete ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub? [y/N] " delete_answer
+
+  if [[ "${delete_answer}" =~ ^[Yy]$ ]]; then
+    rm -f ~/.ssh/id_rsa ~/.ssh/id_rsa.pub
+    echo "Local SSH key files deleted."
+  else
+    echo "Local SSH key files kept."
+  fi
 fi
 
 echo ""
