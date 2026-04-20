@@ -1,7 +1,8 @@
+{{- $gitName := "Prevole" -}}
 [user]
-  name = Prevole
+  name = {{ $gitName }}
   email = 1104066+Prevole@users.noreply.github.com
-  signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOLPiZ/9CiIeNyE2HukpGn8V4U1fzwZLULHfi8wMroIf
+  signingkey = {{ onepasswordRead (printf "op://%s/%s - %s - ED25519/public key" .chezmoi.hostname $gitName .chezmoi.hostname) }}
 
 [gpg]
   format = ssh
