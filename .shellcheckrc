@@ -1,0 +1,8 @@
+# shellcheck configuration
+# https://www.shellcheck.net/wiki/Directive
+
+# Target shell
+shell=bash
+
+# SC1090/SC1091: don't follow sourced files (setup.d scripts are sourced at runtime)
+disable=SC1090,SC1091
