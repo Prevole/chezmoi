@@ -51,10 +51,10 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 export SETUPTOOLS_USE_DISTUTILS=stdlib
 
 # Add this to get JetBrains commands (idea, pycharm, ...)
-#export PATH="/Users/prevole/.local/bin:$PATH"
+#export PATH="/Users/{{ .chezmoi.homeDir }}/.local/bin:$PATH"
 
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="/Users/Prevole/.rd/bin:$PATH"
+export PATH="/Users/{{ .chezmoi.homeDir }}/.rd/bin:$PATH"
 ### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 
 eval "$(/opt/homebrew/bin/brew shellenv)"

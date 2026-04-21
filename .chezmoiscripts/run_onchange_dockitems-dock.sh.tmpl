@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 set -euo pipefail
 
-# dock.yaml hash: {{ include ".chezmoidata/dock.yaml" | sha256sum }}
+# dock/{{ .profile }}.yaml hash: {{ include (printf "profiles/%s/.chezmoidata/dock.yaml" .profile) | sha256sum }}
 
 echo "Clearing existing Dock items..."
 dockutil --remove all --no-restart

@@ -1,5 +1,6 @@
 {{- $setupType := promptChoiceOnce . "setupType" "Setup type" (list "personal" "work") }}
 {{- $fullSetup := promptChoiceOnce . "fullSetup" "Full setup (install all tools for this setup type)?" (list "yes" "no") | eq "yes" }}
+{{- $profile := promptStringOnce . "profile" "Profile name (used to load git repositories from 1Password)" }}
 
 git:
   autoCommit: true
@@ -8,4 +9,4 @@ git:
 data:
   setupType: {{ $setupType }}
   fullSetup: {{ $fullSetup }}
-  email: {{ if eq $setupType "work" }}prevole@REDACTED.ch{{ else }}prevole@prevole.ch{{ end }}
+  profile: {{ $profile }}

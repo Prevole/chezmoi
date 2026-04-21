@@ -1,0 +1,10 @@
+dock:
+  apps:
+    - /System/Applications/System Settings.app
+    - /Applications/iTerm.app
+    - /Applications/Firefox.app
+    - /Applications/Google Chrome.app
+    - /System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app
+    - /Applications/Microsoft Word.app
+    - /Applications/Microsoft Excel.app
+    - /Applications/Microsoft PowerPoint.app

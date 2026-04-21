@@ -4,9 +4,10 @@ README.md
 .tool-versions
 scripts
 doc
+profiles
 
-{{- if ne .setupType "work" }}
-.gitconf/pro/.gitconfig
+{{- if ne .profile "work" }}
+.gitconf/pro.config
 .m2/settings.xml
 .oh-my-zsh/custom/plugins/lppro
 {{- end }}

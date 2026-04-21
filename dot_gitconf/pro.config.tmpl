@@ -1,8 +1,8 @@
-{{- $gitName := "Prevole" -}}
+{{- $op := onepasswordDetailsFields "ahzxvdiv25gs2afzpmyquv2yqy" -}}
 [user]
-  name = {{ $gitName }}
-  email = {{ .email }}
-  signingkey = {{ onepasswordRead (printf "op://%s/%s - %s - ED25519/public key" .chezmoi.hostname $gitName .chezmoi.hostname) }}
+  name = "{{- $op.name.value }}"
+  email = "{{- $op.email.value }}"
+  signingkey = {{ onepasswordRead (printf "op://%s/%s - %s - ED25519/public key" .chezmoi.hostname $op.name.value .chezmoi.hostname) }}
 
 [gpg]
   format = ssh
@@ -14,7 +14,7 @@
   gpgsign = true
 
 [github]
-  user = "REDACTED_REDACTED"
+  user = "{{- $op.username.value }}"
 
 [credential]
 	helper =

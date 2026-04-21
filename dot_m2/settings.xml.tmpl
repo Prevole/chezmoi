@@ -1,3 +1,5 @@
+{{- $op := onepasswordDetailsFields "wgfzv73mb3qeafxnexlzeoxxkm" -}}
+{{- $gitOp := onepasswordDetailsFields "ahzxvdiv25gs2afzpmyquv2yqy" -}}
 <?xml version="1.0" encoding="UTF-8" ?>
 <settings
 		xmlns="http://maven.apache.org/SETTINGS/1.0.0"
@@ -9,23 +11,25 @@
 	<servers>
 		<server>
 			<id>github</id>
-			<username>REDACTED_REDACTED</username>
-			<password>{{- (onepasswordDetailsFields "wgfzv73mb3qeafxnexlzeoxxkm").password.value }}</password>
+			<username>{{- $op.username.value }}</username>
+			<password>{{- $op.password.value }}</password>
 		</server>
+
 		<server>
 			<id>github-artifact-releases</id>
-			<username>REDACTED_REDACTED</username>
-			<password>{{- (onepasswordDetailsFields "wgfzv73mb3qeafxnexlzeoxxkm").password.value }}</password>
+			<username>{{- $op.username.value }}</username>
+			<password>{{- $op.password.value }}</password>
 		</server>
 	</servers>
 
 	<profiles>
 		<profile>
 			<id>internal-repositories</id>
+
 			<repositories>
 				<repository>
 					<id>github</id>
-					<url>https://maven.pkg.github.com/REDACTED/ghp-artifact-releases</url>
+					<url>https://maven.pkg.github.com/{{- $op.organisation.value }}/ghp-artifact-releases</url>
 					<releases>
 						<enabled>true</enabled>
 					</releases>
@@ -37,7 +41,7 @@
 
 				<repository>
 					<id>github-artifact-releases</id>
-					<url>https://maven.pkg.github.com/REDACTED/ghp-artifact-releases</url>
+					<url>https://maven.pkg.github.com/{{- $op.organisation.value }}/ghp-artifact-releases</url>
 					<releases>
 						<enabled>true</enabled>
 					</releases>
@@ -49,7 +53,7 @@
 
 				<repository>
 					<id>github-artifact-snapshots</id>
-					<url>https://maven.pkg.github.com/REDACTED/ghp-artifact-releases</url>
+					<url>https://maven.pkg.github.com/{{- $op.organisation.value }}/ghp-artifact-releases</url>
 					<releases>
 						<enabled>true</enabled>
 					</releases>
@@ -63,10 +67,12 @@
 			<pluginRepositories>
 				<pluginRepository>
 					<id>github</id>
-					<url>https://maven.pkg.github.com/REDACTED/ghp-artifact-releases</url>
+					<url>https://maven.pkg.github.com/{{- $op.organisation.value }}/ghp-artifact-releases</url>
+
 					<releases>
 						<enabled>true</enabled>
 					</releases>
+
 					<snapshots>
 						<enabled>true</enabled>
 						<updatePolicy>always</updatePolicy>
@@ -79,5 +85,4 @@
 	<activeProfiles>
 		<activeProfile>internal-repositories</activeProfile>
 	</activeProfiles>
-
 </settings>

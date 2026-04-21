@@ -53,26 +53,17 @@
 	required = true
 
 {{ if eq .setupType "work" }}
-[includeIf "gitdir:~/Documents/repositories/github-perso/"]
+[includeIf "gitdir:~/Documents/repositories/perso/"]
   path = ~/.gitconf/perso.config
 
-[includeIf "gitdir:~/Documents/repositories/mo/"]
-  path = ~/.gitconf/pro.config
-
-[includeIf "gitdir:~/Documents/repositories/private/"]
-  path = ~/.gitconf/pro.config
-
-[includeIf "gitdir:~/Documents/repositories/github/"]
-  path = ~/.gitconf/pro.config
-
-[includeIf "gitdir:~/.local/share/chezmoi/"]
+[includeIf "gitdir:~/Documents/repositories/work/"]
   path = ~/.gitconf/pro.config
 {{ end -}}
 
 {{ if eq .setupType "personal" }}
 [includeIf "gitdir:~/Documents/repositories/"]
   path = ~/.gitconf/perso.config
+{{ end -}}
 
 [includeIf "gitdir:~/.local/share/chezmoi/"]
   path = ~/.gitconf/perso.config
-{{ end -}}

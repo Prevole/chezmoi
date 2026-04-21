@@ -114,6 +114,66 @@ _internal_rep() {
 }
 
 # ---------------------------------------------------------------------------
+# Git repository management
+# ---------------------------------------------------------------------------
+
+# Clone all repositories from 1Password (Git Repositories - <profile>)
+# that are not already present on the filesystem.
+# Root directory is read from ~/.config/gitrepos/config.yaml.
+function repos_clone() {
+  ruby "${0:A:h}/repos_clone.rb"
+}
+
+# Track the current git repository into 1Password (Git Repositories - <profile>).
+# Detects the category from the directory path relative to the configured root,
+# then asks the user to confirm or override. Leave category empty for flat list.
+function repo_track() {
+  local config_file="$HOME/.config/gitrepos/config.yaml"
+
+  if [[ ! -f "$config_file" ]]; then
+    echo "Config file not found: $config_file"
+    return 1
+  fi
+
+  local git_root
+  git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+  if [[ -z "$git_root" ]]; then
+    echo "Not inside a git repository."
+    return 1
+  fi
+
+  local repo_root name url inferred_category category
+  repo_root=$(ruby -ryaml -e "puts File.expand_path(YAML.load_file('$config_file')['git']['root'])")
+  name=$(basename "$git_root")
+  url=$(git -C "$git_root" remote get-url origin 2>/dev/null)
+
+  if [[ -z "$url" ]]; then
+    echo "No remote 'origin' found for this repository."
+    return 1
+  fi
+
+  # Infer category from path: strip repo_root prefix and repo name
+  local parent
+  parent=$(dirname "$git_root")
+  if [[ "$parent" == "$repo_root"/* || "$parent" == "$repo_root" ]]; then
+    inferred_category="${parent#$repo_root/}"
+  else
+    inferred_category=""
+  fi
+
+  echo "Repository : $name"
+  echo "URL        : $url"
+  echo "Root       : $repo_root"
+  echo "Category   : ${inferred_category:-<none — flat list>}"
+  echo ""
+
+  read -r "category?Category (leave empty for flat list) [${inferred_category}]: "
+  category="${category:-$inferred_category}"
+
+  ruby "${0:A:h}/repo_track.rb" "$category" "$name" "$url"
+}
+
+# ---------------------------------------------------------------------------
 # Utility functions
 # ---------------------------------------------------------------------------
 
