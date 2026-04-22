@@ -7,6 +7,19 @@
 #
 # Usage: repos_track_import.rb <file>
 #   file — path to a YAML file with a 'repositories' key (flat list or map)
+#
+# Supported formats:
+#
+#   With categories (Hash):
+#     repositories:
+#       category:
+#         - url: git@github.com:org/repo.git        # name inferred from URL
+#         - name: custom-name                       # name overrides URL basename
+#           url: git@github.com:org/repo.git
+#
+#   Flat list (Array):
+#     repositories:
+#       - url: git@github.com:org/repo.git
 # ---------------------------------------------------------------------------
 
 require_relative 'lp_1password'

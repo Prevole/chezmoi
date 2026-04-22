@@ -60,20 +60,23 @@ These values are used to populate `~/.gitconfig` and profile-specific Git config
 
 #### Item: `Git Repositories - <profile>`
 
-Create one note per profile (`Git Repositories - work`, `Git Repositories - lp`, `Git Repositories - sp`) in the `chezmoi` vault.
+Create one item per profile (`Git Repositories - work`, `Git Repositories - lp`, `Git Repositories - sp`) in the `chezmoi` vault.
 
-Each note contains the single note field holding a YAML document with your list of repositories. Two formats are supported:
+Each item is a **Secure Note** whose `notesPlain` field holds a YAML document with your list of repositories. The `name` field is optional — if omitted, the folder name is inferred from the URL basename. Use `name` only when your local folder name differs from the repository name.
 
 **With categories:**
 ```yaml
-repositories:
-   my-category: # Will be a root folder where the repositories are cloned
-     - name: my-repo
-       url: git@github.com:username/my-repo.git
-   
-   another-category: # Will be another root folder where the repositories are cloned
-     - name: other-repo
-       url: git@github.com:username/other-repo.git
+work:
+  - url: git@github.com:org/repo.git             # folder name inferred from URL
+  - name: custom-folder                           # explicit folder name
+    url: git@github.com:org/repo.git
+perso:
+  - url: git@github-perso:user/repo.git
+```
+
+**Flat list (no categories):**
+```yaml
+- url: git@github.com:org/repo.git
 ```
 
 **Flat list (no categories):**
@@ -174,10 +177,11 @@ sudo reboot
 repos_clone
 ```
 
-Reads the `Git Repositories - <profile>` item from 1Password (vault `chezmoi`) and clones any repository not already 
+Reads the `Git Repositories - <profile>` item from 1Password (vault `chezmoi`) and clones any repository not already
 present on the filesystem. The root directory is read from `~/.config/gitrepos/config.yaml`.
 
 Repositories are cloned into `<root>/<category>/<name>` when categories are defined, or `<root>/<name>` for flat lists.
+The `name` field is optional — if omitted, the repository name is inferred from the URL basename (e.g. `foo` from `git@github.com:org/foo.git`).
 
 ### Track a new Git repository
 
@@ -187,8 +191,36 @@ From inside any Git repository:
 repo_track
 ```
 
-Infers the category from the directory path, asks you to confirm or override, then adds the repository to the 
-`Git Repositories - <profile>` item in 1Password via `op item edit`.
+Detects the category automatically from the directory structure:
+- `<root>/<repo>` → flat list (no category)
+- `<root>/<category>/<repo>` → categorized
+
+The `name` is omitted from the stored entry when the folder name matches the repository name in the URL, since `repos_clone` will infer it automatically. If the folder name differs (e.g. a local alias), `name` is stored explicitly.
+
+### Import a repository list from a YAML file
+
+```sh
+repos_track_import <file.yaml>
+```
+
+Replaces the `Git Repositories - <profile>` item in 1Password with the contents of a local YAML file. Useful to bulk-import or restore a repository list.
+
+The file must follow the same format as the `notesPlain` field of the 1Password Secure Note:
+
+```yaml
+# With categories
+repositories:
+  work:
+    - url: git@github.com:org/repo.git          # name inferred from URL
+    - name: custom-name                          # explicit name when folder differs
+      url: git@github.com:org/repo.git
+  perso:
+    - url: git@github-perso:user/repo.git
+
+# Or flat list
+repositories:
+  - url: git@github.com:org/repo.git
+```
 
 ### Change global runtime tool versions (mise)
 

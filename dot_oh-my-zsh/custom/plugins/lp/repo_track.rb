@@ -10,6 +10,9 @@
 #   category — category to file the repo under, or "" for flat list
 #   name     — repo directory name (e.g. foo)
 #   url      — git remote URL (e.g. git@github.com:org/foo.git)
+#
+# name is omitted from the stored entry when it matches the URL basename,
+# since repos_clone will infer it automatically in that case.
 # ---------------------------------------------------------------------------
 
 require_relative 'lp_1password'
@@ -24,26 +27,33 @@ end
 data, vault, item = op_read_repositories
 repositories = data['repositories']
 
+# Build the entry — omit name if it matches the URL basename (redundant)
+entry = if name == repo_name_from_url(url)
+  { 'url' => url }
+else
+  { 'name' => name, 'url' => url }
+end
+
 # ---------------------------------------------------------------------------
 # Check for duplicate and add entry
 # ---------------------------------------------------------------------------
 if repositories.is_a?(Hash)
   cat = category.nil? || category.empty? ? '_uncategorized' : category
-  existing = (repositories[cat] || []).any? { |r| r['name'] == name }
+  existing = (repositories[cat] || []).any? { |r| (r['name'] || repo_name_from_url(r['url'])) == name }
   if existing
     puts "Already tracked: #{cat}/#{name}"
     exit 0
   end
   repositories[cat] ||= []
-  repositories[cat] << { 'name' => name, 'url' => url }
+  repositories[cat] << entry
   label = "#{cat}/#{name}"
 else
-  existing = repositories.any? { |r| r['name'] == name }
+  existing = repositories.any? { |r| (r['name'] || repo_name_from_url(r['url'])) == name }
   if existing
     puts "Already tracked: #{name}"
     exit 0
   end
-  repositories << { 'name' => name, 'url' => url }
+  repositories << entry
   label = name
 end
 

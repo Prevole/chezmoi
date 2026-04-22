@@ -11,13 +11,13 @@
 #   With categories (Hash):
 #     repositories:
 #       category1:
-#         - name: foo
+#         - url: git@github.com:org/foo.git        # name inferred from URL
+#         - name: custom-name                       # name overrides URL basename
 #           url: git@github.com:org/foo.git
 #
 #   Flat list (Array):
 #     repositories:
-#       - name: foo
-#         url: git@github.com:org/foo.git
+#       - url: git@github.com:org/foo.git
 # ---------------------------------------------------------------------------
 
 require 'yaml'
@@ -48,8 +48,9 @@ entries.each do |entry|
   FileUtils.mkdir_p(entry[:dir])
 
   entry[:repos].each do |repo|
-    target = File.join(entry[:dir], repo['name'])
-    label  = entry[:label] ? "#{entry[:label]}/#{repo['name']}" : repo['name']
+    name   = repo['name'] || repo_name_from_url(repo['url'])
+    target = File.join(entry[:dir], name)
+    label  = entry[:label] ? "#{entry[:label]}/#{name}" : name
 
     if File.exist?(target)
       puts "skip  #{label}"

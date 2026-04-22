@@ -47,8 +47,13 @@ def op_read_repositories
   [YAML.safe_load(raw), vault, item]
 end
 
-def op_write_repositories(data, vault, item)
-  yaml_content = data.to_yaml
+# Extract the repository name from a git URL.
+# Works with SSH (git@github.com:org/repo.git) and HTTPS URLs.
+def repo_name_from_url(url)
+  File.basename(url, '.git')
+end
+
+def op_write_repositories(data, vault, item)  yaml_content = data.to_yaml
 
   # Fetch the full item JSON, update notesPlain, pipe back to op item edit
   item_json, status = Open3.capture2('op', 'item', 'get', "--vault=#{vault}", item, '--format=json')
