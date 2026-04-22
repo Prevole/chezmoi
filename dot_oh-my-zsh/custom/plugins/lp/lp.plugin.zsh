@@ -128,9 +128,22 @@ function repos_clone() {
   ruby "$_lp_plugin_dir/repos_clone.rb"
 }
 
+# Import a YAML file into 1Password (Git Repositories - <profile>),
+# replacing the current content entirely.
+# The file must have a 'repositories' key (flat list or categorized map).
+function repos_track_import() {
+  if [[ -z "$1" ]]; then
+    echo "Usage: repos_track_import <file.yaml>"
+    return 1
+  fi
+
+  ruby "$_lp_plugin_dir/repos_track_import.rb" "$1"
+}
+
 # Track the current git repository into 1Password (Git Repositories - <profile>).
-# Detects the category from the directory path relative to the configured root,
-# then asks the user to confirm or override. Leave category empty for flat list.
+# Detects flat vs category mode from the directory structure:
+#   <root>/<repo>          → flat (parent has no .git, is the root itself)
+#   <root>/<category>/<repo> → category mode (parent has no .git, is not the root)
 function repo_track() {
   local config_file="$HOME/.config/gitrepos/config.yaml"
 
@@ -146,7 +159,7 @@ function repo_track() {
     return 1
   fi
 
-  local repo_root name url inferred_category category
+  local repo_root name url category
   repo_root=$(ruby -ryaml -e "puts File.expand_path(YAML.load_file('$config_file')['git']['root'])")
   name=$(basename "$git_root")
   url=$(git -C "$git_root" remote get-url origin 2>/dev/null)
@@ -156,23 +169,23 @@ function repo_track() {
     return 1
   fi
 
-  # Infer category from path: strip repo_root prefix and repo name
+  # Detect flat vs category from directory structure:
+  # flat     → parent == repo_root (repo is directly under root)
+  # category → parent != repo_root and parent has no .git (parent is a category folder)
   local parent
   parent=$(dirname "$git_root")
-  if [[ "$parent" == "$repo_root"/* || "$parent" == "$repo_root" ]]; then
-    inferred_category="${parent#$repo_root/}"
+
+  if [[ "$parent" == "$repo_root" ]]; then
+    category=""
   else
-    inferred_category=""
+    category="${parent#$repo_root/}"
   fi
 
   echo "Repository : $name"
   echo "URL        : $url"
   echo "Root       : $repo_root"
-  echo "Category   : ${inferred_category:-<none — flat list>}"
+  [[ -n "$category" ]] && echo "Category   : $category"
   echo ""
-
-  read -r "category?Category (leave empty for flat list) [${inferred_category}]: "
-  category="${category:-$inferred_category}"
 
   ruby "$_lp_plugin_dir/repo_track.rb" "$category" "$name" "$url"
 }

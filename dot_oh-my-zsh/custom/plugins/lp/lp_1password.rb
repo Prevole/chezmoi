@@ -9,6 +9,7 @@
 # ---------------------------------------------------------------------------
 
 require 'yaml'
+require 'json'
 require 'open3'
 
 CONFIG_FILE = File.expand_path('~/.config/gitrepos/config.yaml')
@@ -47,14 +48,30 @@ def op_read_repositories
 end
 
 def op_write_repositories(data, vault, item)
-  _, status = Open3.capture2(
-    'op', 'item', 'edit',
-    "--vault=#{vault}",
-    item,
-    "notesPlain=#{data.to_yaml}"
+  yaml_content = data.to_yaml
+
+  # Fetch the full item JSON, update notesPlain, pipe back to op item edit
+  item_json, status = Open3.capture2('op', 'item', 'get', "--vault=#{vault}", item, '--format=json')
+  unless status.success?
+    warn "Failed to fetch '#{item}' from 1Password vault '#{vault}'."
+    exit 1
+  end
+
+  item_data = JSON.parse(item_json)
+  notes_field = item_data['fields'].find { |f| f['id'] == 'notesPlain' }
+  if notes_field.nil?
+    warn "Field 'notesPlain' not found in item '#{item}'."
+    exit 1
+  end
+  notes_field['value'] = yaml_content
+
+  stdout, stderr, status = Open3.capture3(
+    'op', 'item', 'edit', "--vault=#{vault}", item,
+    stdin_data: JSON.generate(item_data)
   )
 
   unless status.success?
+    warn stderr unless stderr.empty?
     warn "Failed to update '#{item}' in 1Password vault '#{vault}'."
     exit 1
   end
