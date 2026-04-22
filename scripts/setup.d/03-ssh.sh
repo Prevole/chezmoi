@@ -60,17 +60,22 @@ else
   log_skip "Repositories directory already exists. Skip."
 fi
 
-log_info ""
-log_info "If you have a personal GitHub account, you can generate a separate SSH key for it."
-read -r -p "Generate a personal GitHub SSH key? [y/N] " personal_key_answer
+# Check if a personal SSH key already exists (pattern: *-<hostname>-ed25519)
+EXISTING_PERSONAL_KEY=$(find ~/.ssh -maxdepth 1 -name "*-$(hostname)-ed25519" ! -name "id_ed25519" 2>/dev/null | head -1)
 
-if [[ "${personal_key_answer}" =~ ^[Yy]$ ]]; then
-  read -r -p "Enter your personal GitHub username: " personal_github_user
+if [[ -n "$EXISTING_PERSONAL_KEY" ]]; then
+  log_skip "Personal SSH key already exists (${EXISTING_PERSONAL_KEY}). Skip."
+else
+  log_info ""
+  log_info "If you have a personal GitHub account, you can generate a separate SSH key for it."
+  read -r -p "Generate a personal GitHub SSH key? [y/N] " personal_key_answer
 
-  PERSONAL_KEY_FILE=~/.ssh/${personal_github_user}-$(hostname)-ed25519
-  PERSONAL_KEY_TITLE="${personal_github_user} - $(hostname) - ED25519"
+  if [[ "${personal_key_answer}" =~ ^[Yy]$ ]]; then
+    read -r -p "Enter your personal GitHub username: " personal_github_user
 
-  if [ ! -f "$PERSONAL_KEY_FILE" ]; then
+    PERSONAL_KEY_FILE=~/.ssh/${personal_github_user}-$(hostname)-ed25519
+    PERSONAL_KEY_TITLE="${personal_github_user} - $(hostname) - ED25519"
+
     log_info "Generating personal SSH key..."
 
     ssh-keygen -t ed25519 -C "${personal_github_user}@$(hostname)" -f "$PERSONAL_KEY_FILE" -N ""
@@ -87,7 +92,6 @@ if [[ "${personal_key_answer}" =~ ^[Yy]$ ]]; then
 
     read -r -p "Press Enter after adding the personal SSH key to GitHub..."
     log_success "Personal SSH key added to GitHub."
-  else
-    log_skip "Personal SSH key already exists. Skip."
   fi
+fi
 fi
