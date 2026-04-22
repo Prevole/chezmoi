@@ -38,15 +38,15 @@ else
   log_skip "Machine name is already correct. Skip."
 fi
 
-CURRENT_AUDIO_VOLUME=$(nvram SystemAudioVolume 2>/dev/null | awk '{print $2}' || echo "unset")
-if [[ "$CURRENT_AUDIO_VOLUME" != " " ]]; then
+CURRENT_AUDIO_VOLUME=$(nvram SystemAudioVolume 2>/dev/null | awk '{print $2}')
+if [[ "$CURRENT_AUDIO_VOLUME" == "%80" || "$CURRENT_AUDIO_VOLUME" == " " ]]; then
+  log_skip "Startup sound already disabled. Skip."
+else
   log_info "Disabling startup sound..."
 
-  sudo nvram SystemAudioVolume=" "
+  sudo nvram SystemAudioVolume="%80"
 
   log_success "Startup sound disabled."
-else
-  log_skip "Startup sound already disabled. Skip."
 fi
 
 if [ ! -f /usr/libexec/rosetta/oahd ]; then

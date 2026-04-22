@@ -94,4 +94,3 @@ else
     log_success "Personal SSH key added to GitHub."
   fi
 fi
-fi
