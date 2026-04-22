@@ -153,15 +153,19 @@ The script signs in to the `op` CLI and creates a vault named after your machine
 The script opens `~/.ssh` in Finder and displays the exact title and vault to use:
 
 1. In 1Password, select the `<hostname>` vault created in the previous step.
-2. Clic on `New Item`
+2. Click on `New Item`
 3. Select `SSH Key`
-4. Title the item exactly as shown in the terminal: `<username> - <hostname> - <algirthm>`
+4. Title the item exactly as shown in the terminal: `<username> - <hostname> - ED25519`
 5. Drag and drop the private key (e.g. `~/.ssh/id_ed25519`)
-6. Repeat the process from 1 for key you want to use with GitHub
-7. Save, then press Enter in the terminal.
+6. In the **Hosts** field of the item, add the URL that matches the key's GitHub account:
+   - Work key: `ssh://git@github.com`
+   - Personal key: `ssh://git@github-perso`
+7. Repeat from step 1 for each additional key (e.g. the personal key)
+8. Save, then press Enter in the terminal.
 
-The script will then restart 1Password so the SSH agent picks up the imported key. Once it is back up and the agent 
-shows as running, press Enter to continue.
+The Hosts field is required for the 1Password SSH agent to select the correct key per GitHub account — without it, the agent may use the wrong key for `github-perso` connections.
+
+The script will then restart 1Password so the SSH agent picks up the imported keys. Once it is back up and the agent shows as running, press Enter to continue.
 
 ### 6. Restart
 

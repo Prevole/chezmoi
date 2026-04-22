@@ -45,7 +45,13 @@ fi
 log_box "Manual step: import your SSH keys into 1Password" \
   "Main key : $SSH_KEY_TITLE" \
   "Vault    : $HOSTNAME" \
-  "Path     : 1Password > Developer Settings > SSH Keys > Add SSH Key"
+  "Path     : 1Password > Developer Settings > SSH Keys > Add SSH Key" \
+  "" \
+  "IMPORTANT: Once the key is imported, open the item and add the" \
+  "following URLs in the 'Hosts' field so the SSH agent can match" \
+  "the correct key for each GitHub account:" \
+  "  Work key  : ssh://git@github.com" \
+  "  Perso key : ssh://git@github-perso"
 
 open ~/.ssh
 read -r -p "Press Enter once the SSH keys are imported into the '$HOSTNAME' vault..."
