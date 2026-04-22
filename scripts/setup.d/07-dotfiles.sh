@@ -20,8 +20,8 @@ if [ ! -d ~/.local/share/chezmoi ]; then
 
   # Convert HTTPS to SSH if needed — SSH URLs are used as-is
   if [[ "$REMOTE_URL" == https://* ]]; then
-    SSH_URL="${REMOTE_URL/https:\/\//git@}"
-    SSH_URL="${SSH_URL/\//\:}"
+    # https://github.com/user/repo.git -> git@github.com:user/repo.git
+    SSH_URL=$(echo "$REMOTE_URL" | sed 's|https://\([^/]*\)/|\1:|' | sed 's|^|git@|')
   else
     SSH_URL="$REMOTE_URL"
   fi
