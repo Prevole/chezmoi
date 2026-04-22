@@ -38,7 +38,7 @@ else
   log_skip "Machine name is already correct. Skip."
 fi
 
-CURRENT_AUDIO_VOLUME=$(nvram SystemAudioVolume 2>/dev/null | awk '{print $2}')
+CURRENT_AUDIO_VOLUME=$(nvram SystemAudioVolume 2>/dev/null | awk '{print $2}' || true)
 if [[ "$CURRENT_AUDIO_VOLUME" == "%80" || "$CURRENT_AUDIO_VOLUME" == " " ]]; then
   log_skip "Startup sound already disabled. Skip."
 else
@@ -52,7 +52,7 @@ fi
 if [ ! -f /usr/libexec/rosetta/oahd ]; then
   log_info "Installing Rosetta 2..."
 
-  softwareupdate --install-rosetta --agree-to-license
+  softwareupdate --install-rosetta --agree-to-license || true
 
   log_success "Rosetta 2 installed."
 else
