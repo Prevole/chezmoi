@@ -1,3 +1,6 @@
+# Capture plugin directory at load time — $0 is not reliable inside functions
+_lp_plugin_dir="${0:A:h}"
+
 # ---------------------------------------------------------------------------
 # Cache management — rootdirs extracted from ~/.gitconfig includeIf entries.
 # Cache is invalidated when ~/.gitconfig is newer than the cache file.
@@ -55,19 +58,20 @@ _lp_find_repos() {
   while IFS= read -r rootdir; do
     [[ -z "$rootdir" ]] && continue
 
-    # Level 1: rootdir/repo_name/.git
-    candidate="$rootdir/$query"
-    if [[ -d "$candidate/.git" ]]; then
-      matches+=("$candidate")
-      continue
-    fi
-
-    # Level 2 (fallback): rootdir/*/repo_name/.git
+    # Level 1: rootdir/repo_name — case-insensitive prefix match
     for candidate in "$rootdir"/*/; do
-      candidate="${candidate%/}/$query"
-      if [[ -d "$candidate/.git" ]]; then
-        matches+=("$candidate")
-      fi
+      candidate="${candidate%/}"
+      [[ "${candidate:t:l}" == ${query:l}* ]] || continue
+      [[ -d "$candidate/.git" ]] || continue
+      matches+=("$candidate")
+    done
+
+    # Level 2: rootdir/category/repo_name — case-insensitive prefix match
+    for candidate in "$rootdir"/*/*/; do
+      candidate="${candidate%/}"
+      [[ "${candidate:t:l}" == ${query:l}* ]] || continue
+      [[ -d "$candidate/.git" ]] || continue
+      matches+=("$candidate")
     done
   done <<< "$(_lp_build_rootdirs_cache)"
 
@@ -121,7 +125,7 @@ _internal_rep() {
 # that are not already present on the filesystem.
 # Root directory is read from ~/.config/gitrepos/config.yaml.
 function repos_clone() {
-  ruby "${0:A:h}/repos_clone.rb"
+  ruby "$_lp_plugin_dir/repos_clone.rb"
 }
 
 # Track the current git repository into 1Password (Git Repositories - <profile>).
@@ -170,7 +174,7 @@ function repo_track() {
   read -r "category?Category (leave empty for flat list) [${inferred_category}]: "
   category="${category:-$inferred_category}"
 
-  ruby "${0:A:h}/repo_track.rb" "$category" "$name" "$url"
+  ruby "$_lp_plugin_dir/repo_track.rb" "$category" "$name" "$url"
 }
 
 # ---------------------------------------------------------------------------
