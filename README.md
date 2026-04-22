@@ -28,6 +28,8 @@ Sensitive data (SSH keys, tokens, secrets) is never stored in this repository. I
 
 ### 1. Install developer tools
 
+> This will make git available in the terminal.
+
 ```sh
 xcode-select --install
 ```

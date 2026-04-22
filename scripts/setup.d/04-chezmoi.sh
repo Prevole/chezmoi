@@ -42,9 +42,10 @@ EOF
 
 BREWFILE_TMPL="$(dirname "${BASH_SOURCE[0]}")/../../dot_homebrew/Brewfile.tmpl"
 BREWFILE_RENDERED="/tmp/Brewfile"
+CHEZMOI_SOURCE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 log_info "Rendering Brewfile for profile '$PROFILE'..."
 
-chezmoi execute-template < "$BREWFILE_TMPL" > "$BREWFILE_RENDERED"
+chezmoi execute-template --source "$CHEZMOI_SOURCE" < "$BREWFILE_TMPL" > "$BREWFILE_RENDERED"
 
 log_success "Brewfile rendered."
