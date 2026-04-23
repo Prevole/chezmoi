@@ -28,14 +28,20 @@ _lp_build_rootdirs_cache() {
       # Expand ~ and strip trailing slash
       dir="${dir/#\~/$HOME}"
       dir="${dir%/}"
-      # If the gitdir itself is a git repo, use its parent as rootdir so that
-      # _lp_find_repos can discover it at level 1 (rootdir/repo_name).
-      if [[ -d "$dir/.git" ]]; then
-        dir="${dir:h}"
-      fi
+      # Always add both the path itself and its parent as rootdirs.
+      # This handles two cases:
+      #   - gitdir is a container of repos (e.g. ~/Documents/repositories/work/)
+      #     → the path itself is the rootdir
+      #   - gitdir is a repo directly (e.g. ~/.local/share/chezmoi/)
+      #     → the parent is the rootdir
+      # _lp_find_repos filters by .git presence so false positives are harmless.
       rootdirs+=("$dir")
+      rootdirs+=("${dir:h}")
     fi
   done < "$gitconfig"
+
+  # Deduplicate
+  rootdirs=("${(u)rootdirs[@]}")
 
   # Write cache (skipped when REP_NO_CACHE=1 to avoid polluting with debug runs)
   if [[ -z "${REP_NO_CACHE:-}" ]]; then
