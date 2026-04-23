@@ -1,34 +1,53 @@
 # =============================================================================
 # SSH key cleanup
 #
-# Once chezmoi has been applied and the SSH agent is fully operational,
-# the local SSH private key files are no longer needed — keys are served
-# by the 1Password SSH agent. This script offers to remove them.
+# Removes the SSH private keys that were temporarily extracted from 1Password
+# to disk by 07-dotfiles.sh. After chezmoi apply, the 1Password SSH agent
+# serves all keys — no private key files are needed on disk.
 #
-# Must run after 07-dotfiles.sh to ensure chezmoi has applied the SSH config
-# and the agent is ready before the local key files are deleted.
+# Only the temporary files created by 07-dotfiles.sh are removed:
+#   - ~/.ssh/id_ed25519          (primary key)
+#   - ~/.ssh/<personal-key-slug> (personal key, work profile only)
+#
+# Public key files (.pub) are also removed since the agent doesn't use them.
 # =============================================================================
 
-SSH_KEYS=$(find ~/.ssh -maxdepth 1 -type f ! -name "*.pub" ! -name "config" ! -name "known_hosts" ! -name "authorized_keys")
+TEMP_KEYS=()
 
-if [ -n "$SSH_KEYS" ]; then
-  log_info ""
-  log_info "The following SSH keys are now stored in 1Password and served by the SSH agent."
-  log_info "The local key files are no longer needed."
-  log_info ""
-  log_info "$SSH_KEYS"
+[ -f ~/.ssh/id_ed25519 ]     && TEMP_KEYS+=(~/.ssh/id_ed25519)
+[ -f ~/.ssh/id_ed25519.pub ] && TEMP_KEYS+=(~/.ssh/id_ed25519.pub)
+
+# Personal key: any key matching <personal-key-slug> derived from PERSONAL_KEY_TITLE
+if [[ -n "$PERSONAL_KEY_TITLE" ]]; then
+  PERSONAL_KEY_SLUG=$(echo "$PERSONAL_KEY_TITLE" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+  PERSONAL_KEY_FILE=~/.ssh/${PERSONAL_KEY_SLUG}
+
+  [ -f "$PERSONAL_KEY_FILE" ]      && TEMP_KEYS+=("$PERSONAL_KEY_FILE")
+  [ -f "${PERSONAL_KEY_FILE}.pub" ] && TEMP_KEYS+=("${PERSONAL_KEY_FILE}.pub")
+fi
+
+if [[ ${#TEMP_KEYS[@]} -eq 0 ]]; then
+  log_skip "No temporary SSH key files found. Skip."
+else
+  log_info "The following temporary SSH key files were extracted from 1Password"
+  log_info "during setup and are no longer needed. The 1Password SSH agent"
+  log_info "serves all keys going forward."
   log_info ""
 
-  read -r -p "Delete all local SSH private keys? [y/N] " delete_answer
+  for key in "${TEMP_KEYS[@]}"; do
+    log_info "  $key"
+  done
+
+  log_info ""
+  read -r -p "Delete temporary SSH key files? [y/N] " delete_answer
 
   if [[ "${delete_answer}" =~ ^[Yy]$ ]]; then
-    find ~/.ssh -maxdepth 1 -type f ! -name "*.pub" ! -name "config" ! -name "known_hosts" ! -name "authorized_keys" -delete
-    find ~/.ssh -maxdepth 1 -name "*.pub" -delete
+    for key in "${TEMP_KEYS[@]}"; do
+      rm -f "$key"
+    done
 
-    log_success "Local SSH key files deleted."
+    log_success "Temporary SSH key files deleted. 1Password SSH agent is now the sole key provider."
   else
-    log_skip "Local SSH key files kept."
+    log_skip "Temporary SSH key files kept."
   fi
-else
-  log_skip "No local SSH private key files found. Skip."
 fi

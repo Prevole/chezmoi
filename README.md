@@ -110,14 +110,14 @@ The script sources each file in `setup.d/` in order. It will:
 
 1. Install Homebrew
 2. Configure the machine hostname
-3. Generate an SSH key — pause to let you add the public key to GitHub
-4. Prompt for the **profile** — enter one of:
+3. Sign in to the 1Password CLI — pause to let you configure Developer Settings (see step 5)
+4. Generate SSH keys directly in 1Password — pause to let you add the public keys to GitHub
+5. Prompt for the **profile** and initialize chezmoi — enter one of:
    - `work` — work machine (work-specific tools, pro Git config, work Brewfile)
    - `lp` — personal machine
    - `sp` — secondary personal machine
-5. Render the Brewfile for the chosen profile and install all tools and applications
-6. Open 1Password — pause to let you configure it (see step 5)
-7. Initialize chezmoi and apply dotfiles
+6. Install all Homebrew packages for the chosen profile
+7. Apply dotfiles via chezmoi, then restart
 
 The profile choice is written to `~/.config/chezmoi/chezmoi.yaml` and remembered by `promptChoiceOnce`. It will not be 
 asked again on subsequent `chezmoi apply` runs.
@@ -148,24 +148,30 @@ Press Enter in the terminal to continue.
 The script signs in to the `op` CLI and creates a vault named after your machine hostname. This vault is used by 
 `agent.toml` to serve SSH keys.
 
-#### SSH key import (manual)
+#### SSH key generation (automatic)
 
-The script opens `~/.ssh` in Finder and displays the exact title and vault to use:
+SSH keys are generated directly inside 1Password using `op item create --ssh-generate-key Ed25519` — no private key 
+file is ever written to disk at this stage.
 
-1. In 1Password, select the `<hostname>` vault created in the previous step.
-2. Click on `New Item`
-3. Select `SSH Key`
-4. Title the item exactly as shown in the terminal: `<username> - <hostname> - ED25519`
-5. Drag and drop the private key (e.g. `~/.ssh/id_ed25519`)
-6. In the **Hosts** field of the item, add the URL that matches the key's GitHub account:
-   - Work key: `ssh://git@github.com`
-   - Personal key: `ssh://git@github-perso`
-7. Repeat from step 1 for each additional key (e.g. the personal key)
-8. Save, then press Enter in the terminal.
+For each key, the script copies the public key to the clipboard and opens `https://github.com/settings/keys`. Follow 
+the on-screen instructions to add the key to GitHub, then press Enter to continue.
 
-The Hosts field is required for the 1Password SSH agent to select the correct key per GitHub account — without it, the agent may use the wrong key for `github-perso` connections.
+The script also reminds you to set the **Hosts** field on each 1Password SSH Key item — this is required for the 
+1Password SSH agent to select the correct key per GitHub account:
 
-The script will then restart 1Password so the SSH agent picks up the imported keys. Once it is back up and the agent shows as running, press Enter to continue.
+| Key | Hosts value |
+|---|---|
+| Primary (work/personal) | `ssh://git@github.com` |
+| Personal (work profile only) | `ssh://git@github-perso` |
+
+For more details on GitHub integration:
+- [Autofill public keys on GitHub](https://developer.1password.com/docs/ssh/public-key-autofill#github)
+- [Register a key for commit signing](https://developer.1password.com/docs/ssh/git-commit-signing#step-2-register-your-public-key)
+
+On a **work** profile, the script optionally generates a second key for a personal GitHub account.
+
+1Password is then restarted so the SSH agent picks up the new keys. Once it is back up and the agent shows as running, 
+press Enter to continue.
 
 ### 6. Restart
 
@@ -318,14 +324,15 @@ all share the same shell environment and can pass exported variables to each oth
 
 | Script | Role |
 |---|---|
-| `_utils.sh` | Color helpers: `log_success`, `log_skip`, `log_warn`, `log_info`, `log_box` |
+| `_utils.sh` | Color helpers: `log_success`, `log_skip`, `log_warn`, `log_info`, `log_title`, `log_box` |
 | `01-homebrew.sh` | Install Homebrew |
 | `02-machine.sh` | Set machine hostname |
-| `03-ssh.sh` | Generate SSH key |
-| `04-chezmoi.sh` | Install chezmoi, prompt for profile, render and write Brewfile |
-| `05-apps.sh` | Run `brew bundle` with the rendered Brewfile |
-| `06-1password.sh` | 1Password login, vault creation, SSH key import |
-| `07-dotfiles.sh` | Initialize and apply chezmoi |
+| `03-1password.sh` | 1Password CLI login, Developer Settings pause, machine vault creation, `agent.toml` install |
+| `04-ssh-keys.sh` | Generate SSH keys in 1Password via `op`, pause for GitHub registration |
+| `05-chezmoi.sh` | Prompt for profile, install chezmoi, render and write Brewfile |
+| `06-apps.sh` | Run `brew bundle` with the rendered Brewfile |
+| `07-directories.sh` | Create standard user directories (e.g. `~/Documents/repositories`) |
+| `08-dotfiles.sh` | Temporarily extract SSH key, initialize and apply chezmoi, remove temporary key |
 | `99-restart.sh` | Prompt to restart |
 
 Every step tries to be idempotent — Checks whether the action is already done and skips with `log_skip` if so.
