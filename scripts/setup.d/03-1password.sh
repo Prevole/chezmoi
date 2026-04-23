@@ -22,6 +22,7 @@ if ! brew list --cask 1password &>/dev/null; then
   log_info "Installing 1Password..."
   brew install --cask 1password
   log_success "1Password installed."
+  sleep 3
 else
   log_skip "1Password already installed. Skip."
 fi
