@@ -11,7 +11,7 @@
 # agent.toml is deployed by chezmoi (08-dotfiles.sh), after which 1Password
 # is restarted so the SSH agent picks up the configuration.
 #
-# Exports:
+# Sets:
 #   HOSTNAME — machine hostname (reused by 04-ssh-keys.sh and 08-dotfiles.sh)
 # =============================================================================
 

@@ -1,11 +1,9 @@
 # =============================================================================
 # Utility functions for setup scripts
 #
-# Provides colored output helpers. All functions are available to every script
-# sourced after this file because they share the same shell environment.
-#
-# Color variables (GREEN, ORANGE, RED, NC) must be defined by the caller
-# (mac-setup.sh) before this file is sourced.
+# Provides colored output helpers and defines color variables. All functions
+# and variables are available to every script sourced after this file because
+# they share the same shell environment.
 #
 # Functions:
 #   log_success  <message>  — green: action completed successfully

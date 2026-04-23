@@ -2,6 +2,9 @@
 [user]
   name = "{{- $op.username.value }}"
   email = "{{- $op.email.value }}"
+  {{- /* The signing key title is built as "<github-username> - <hostname> - ED25519",
+         matching the item title created by 04-ssh-keys.sh with the personal GitHub
+         username. $op.username.value must match what was typed at the prompt. */}}
   signingkey = {{ onepasswordRead (printf "op://%s/%s - %s - ED25519/public key" .chezmoi.hostname $op.username.value .chezmoi.hostname) }}
 
 [gpg]

@@ -66,26 +66,23 @@ Create one item per profile (`Git Repositories - work`, `Git Repositories - lp`,
 
 Each item is a **Secure Note** whose `notesPlain` field holds a YAML document with your list of repositories. The `name` field is optional — if omitted, the folder name is inferred from the URL basename. Use `name` only when your local folder name differs from the repository name.
 
+The document must always start with a `repositories:` key.
+
 **With categories:**
 ```yaml
-work:
-  - url: git@github.com:org/repo.git             # folder name inferred from URL
-  - name: custom-folder                           # explicit folder name
-    url: git@github.com:org/repo.git
-perso:
-  - url: git@github-perso:user/repo.git
-```
-
-**Flat list (no categories):**
-```yaml
-- url: git@github.com:org/repo.git
+repositories:
+  work:
+    - url: git@github.com:org/repo.git             # folder name inferred from URL
+    - name: custom-folder                           # explicit folder name
+      url: git@github.com:org/repo.git
+  perso:
+    - url: git@github-perso:user/repo.git
 ```
 
 **Flat list (no categories):**
 ```yaml
 repositories:
-   - name: my-repo
-     url: git@github.com:username/my-repo.git
+  - url: git@github.com:org/repo.git
 ```
 
 > Repositories are cloned into `<root>/<category>/<name>` when categories are defined, or `<root>/<name>` for flat lists.
@@ -108,16 +105,22 @@ git clone https://github.com/<your-username>/<this-repo>.git /tmp/chezmoi
 
 The script sources each file in `setup.d/` in order. It will:
 
-1. Install Homebrew
-2. Configure the machine hostname
-3. Sign in to the 1Password CLI — pause to let you configure Developer Settings (see step 5)
-4. Generate SSH keys directly in 1Password — pause to let you add the public keys to GitHub
-5. Prompt for the **profile** and initialize chezmoi — enter one of:
+> The script pauses at several points to wait for manual actions (adding SSH keys to GitHub, confirming 1Password 
+> settings). macOS may also display security popups or prompt for your user password — these are expected and required.
+
+1. Prompt for the **profile** — enter one of:
    - `work` — work machine (work-specific tools, pro Git config, work Brewfile)
    - `lp` — personal machine
    - `sp` — secondary personal machine
-6. Install all Homebrew packages for the chosen profile
-7. Apply dotfiles via chezmoi, then restart
+2. Install Homebrew
+3. Configure the machine hostname
+4. Sign in to the 1Password CLI — pause to let you configure Developer Settings (see step 5)
+5. Generate SSH keys directly in 1Password — pause to let you add the public keys to GitHub
+6. Install chezmoi and render the Brewfile for the selected profile
+7. Install all Homebrew packages for the chosen profile
+8. Create standard user directories
+9. Apply dotfiles via chezmoi, then restart 1Password
+10. Remove temporary SSH key files from disk
 
 The profile choice is written to `~/.config/chezmoi/chezmoi.yaml` and remembered by `promptChoiceOnce`. It will not be 
 asked again on subsequent `chezmoi apply` runs.
@@ -153,8 +156,8 @@ The script signs in to the `op` CLI and creates a vault named after your machine
 SSH keys are generated directly inside 1Password using `op item create --ssh-generate-key Ed25519` — no private key 
 file is ever written to disk at this stage.
 
-For each key, the script copies the public key to the clipboard and opens `https://github.com/settings/keys`. Follow 
-the on-screen instructions to add the key to GitHub, then press Enter to continue.
+For each key, the script displays a `log_box` with instructions. Open the 1Password item and use the built-in autofill 
+integration to add the public key directly to GitHub — no copy/paste needed. Press Enter in the terminal to continue.
 
 The script also reminds you to set the **Hosts** field on each 1Password SSH Key item — this is required for the 
 1Password SSH agent to select the correct key per GitHub account:
@@ -272,7 +275,7 @@ To find the correct name: `brew search "tool-name"`.
 
 ```sh
 # For specific profile
-vi /profiles/<profile>/Brewfile  # add brew "tool" or cask "app"
+vi profiles/<profile>/homebrew/Brewfile  # add brew "tool" or cask "app"
 chezmoi apply                    # install the new tool or app
 
 # For common tools and applications 
@@ -334,6 +337,7 @@ all share the same shell environment and can pass exported variables to each oth
 | `06-apps.sh` | Run `brew bundle` with the rendered Brewfile |
 | `07-directories.sh` | Create standard user directories (e.g. `~/Documents/repositories`) |
 | `08-dotfiles.sh` | Temporarily extract SSH key, initialize and apply chezmoi, restart 1Password |
+| `98-ssh-cleanup.sh` | Remove temporary SSH key files extracted during setup |
 | `99-restart.sh` | Prompt to restart |
 
 Every step tries to be idempotent — Checks whether the action is already done and skips with `log_skip` if so.

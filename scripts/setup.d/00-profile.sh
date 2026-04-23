@@ -33,4 +33,8 @@ git:
 data:
   profile: "${PROFILE}"
 EOF
+  # Note: this file is intentionally minimal — it contains only the profile
+  # needed by subsequent scripts. chezmoi will overwrite it with a fully
+  # rendered version (including dock data) during 'chezmoi init --apply'
+  # in 08-dotfiles.sh.
 fi

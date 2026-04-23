@@ -22,4 +22,3 @@ else
   log_skip "Homebrew already installed. Skip."
 fi
 
-brew upgrade

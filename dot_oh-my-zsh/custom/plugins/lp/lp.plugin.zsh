@@ -52,9 +52,9 @@ _lp_build_rootdirs_cache() {
   printf '%s\n' "${rootdirs[@]}"
 }
 
-# Force rebuild the rootdirs cache
+# Force rebuild the rootdirs cache immediately
 function lp_cache_refresh() {
-  rm -f "$_lp_cache_file"
+  rep_cc
   _lp_build_rootdirs_cache > /dev/null
   echo "lp: rootdirs cache refreshed."
 }
@@ -90,7 +90,7 @@ _lp_find_repos() {
     done
 
     # Level 2: rootdir/category/repo_name — case-insensitive prefix match
-    for candidate in "$rootdir"/*/*/; do
+    for candidate in "$rootdir"/*/*/(N); do
       candidate="${candidate%/}"
       [[ "${candidate:t:l}" == ${query:l}* ]] || continue
       [[ -d "$candidate/.git" ]] || continue
@@ -217,7 +217,7 @@ function repo_track() {
 # Utility functions
 # ---------------------------------------------------------------------------
 
-function fg() {
+function fgg() {
   find . -name "$2" -exec grep -H "$1" {} \;
 }
 

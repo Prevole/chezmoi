@@ -2,28 +2,24 @@
 # SSH key cleanup
 #
 # Removes the SSH private keys that were temporarily extracted from 1Password
-# to disk by 07-dotfiles.sh. After chezmoi apply, the 1Password SSH agent
+# to disk by 04-ssh-keys.sh. After chezmoi apply, the 1Password SSH agent
 # serves all keys — no private key files are needed on disk.
 #
-# Only the temporary files created by 07-dotfiles.sh are removed:
+# Only the temporary private key files created by 04-ssh-keys.sh are removed:
 #   - ~/.ssh/id_ed25519          (primary key)
 #   - ~/.ssh/<personal-key-slug> (personal key, work profile only)
-#
-# Public key files (.pub) are also removed since the agent doesn't use them.
 # =============================================================================
 
 TEMP_KEYS=()
 
-[ -f ~/.ssh/id_ed25519 ]     && TEMP_KEYS+=(~/.ssh/id_ed25519)
-[ -f ~/.ssh/id_ed25519.pub ] && TEMP_KEYS+=(~/.ssh/id_ed25519.pub)
+[ -f ~/.ssh/id_ed25519 ] && TEMP_KEYS+=(~/.ssh/id_ed25519)
 
 # Personal key: any key matching <personal-key-slug> derived from PERSONAL_KEY_TITLE
 if [[ -n "$PERSONAL_KEY_TITLE" ]]; then
   PERSONAL_KEY_SLUG=$(echo "$PERSONAL_KEY_TITLE" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
   PERSONAL_KEY_FILE=~/.ssh/${PERSONAL_KEY_SLUG}
 
-  [ -f "$PERSONAL_KEY_FILE" ]      && TEMP_KEYS+=("$PERSONAL_KEY_FILE")
-  [ -f "${PERSONAL_KEY_FILE}.pub" ] && TEMP_KEYS+=("${PERSONAL_KEY_FILE}.pub")
+  [ -f "$PERSONAL_KEY_FILE" ] && TEMP_KEYS+=("$PERSONAL_KEY_FILE")
 fi
 
 if [[ ${#TEMP_KEYS[@]} -eq 0 ]]; then
