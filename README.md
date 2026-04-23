@@ -325,11 +325,12 @@ all share the same shell environment and can pass exported variables to each oth
 | Script | Role |
 |---|---|
 | `_utils.sh` | Color helpers: `log_success`, `log_skip`, `log_warn`, `log_info`, `log_title`, `log_box` |
+| `00-profile.sh` | Prompt for profile, write `chezmoi.yaml` |
 | `01-homebrew.sh` | Install Homebrew |
 | `02-machine.sh` | Set machine hostname |
 | `03-1password.sh` | Install 1Password and op CLI, login, Developer Settings pause, machine vault creation |
 | `04-ssh-keys.sh` | Generate SSH keys in 1Password via `op`, pause for GitHub registration |
-| `05-chezmoi.sh` | Prompt for profile, install chezmoi, render and write Brewfile |
+| `05-chezmoi.sh` | Install chezmoi, render Brewfile for the selected profile |
 | `06-apps.sh` | Run `brew bundle` with the rendered Brewfile |
 | `07-directories.sh` | Create standard user directories (e.g. `~/Documents/repositories`) |
 | `08-dotfiles.sh` | Temporarily extract SSH key, initialize and apply chezmoi, restart 1Password |

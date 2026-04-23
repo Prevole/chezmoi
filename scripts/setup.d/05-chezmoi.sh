@@ -1,12 +1,11 @@
 # =============================================================================
-# chezmoi installation and configuration
+# chezmoi installation and Brewfile rendering
 #
 # Installs chezmoi early to render the Brewfile template before brew bundle
 # runs (chicken-and-egg: the Brewfile is a template requiring chezmoi).
-# Prompts for profile, writes chezmoi.yaml, and renders the Brewfile template.
+# Profile is already set by 00-profile.sh.
 #
 # Exports:
-#   PROFILE           — profile selected by the user: "work", "lp" or "sp"
 #   BREWFILE_RENDERED — path to the rendered Brewfile: /tmp/Brewfile
 # =============================================================================
 
@@ -19,26 +18,6 @@ if ! command -v chezmoi &> /dev/null; then
 else
   log_skip "chezmoi already installed. Skip."
 fi
-
-log_info ""
-read -r -p "Profile [work/lp/sp]: " PROFILE
-
-while [[ "$PROFILE" != "work" && "$PROFILE" != "lp" && "$PROFILE" != "sp" ]]; do
-  log_warn "Invalid choice. Please enter 'work', 'lp' or 'sp'."
-  read -r -p "Profile [work/lp/sp]: " PROFILE
-done
-
-log_success "Profile: $PROFILE"
-
-mkdir -p ~/.config/chezmoi
-cat > ~/.config/chezmoi/chezmoi.yaml <<EOF
-git:
-  autoCommit: true
-  autoPush: true
-
-data:
-  profile: "${PROFILE}"
-EOF
 
 BREWFILE_TMPL="$(dirname "${BASH_SOURCE[0]}")/../../dot_homebrew/Brewfile.tmpl"
 BREWFILE_RENDERED="/tmp/Brewfile"

@@ -5,8 +5,12 @@
 # hostname (created by 03-1password.sh). Keys are never written to disk here —
 # they live exclusively in 1Password and are served by the SSH agent.
 #
-# A temporary extraction to disk happens later in 07-dotfiles.sh to allow
+# A temporary extraction to disk happens later in 08-dotfiles.sh to allow
 # chezmoi to clone the dotfiles repo via SSH, then cleaned up in 98-ssh-cleanup.sh.
+#
+# Requires:
+#   PROFILE  — set by 00-profile.sh
+#   HOSTNAME — set by 03-1password.sh
 #
 # Exports:
 #   SSH_KEY_TITLE      — primary key item title in 1Password
