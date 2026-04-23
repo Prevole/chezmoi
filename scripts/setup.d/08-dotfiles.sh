@@ -32,11 +32,11 @@ if [ ! -d ~/.local/share/chezmoi ]; then
   # Handles both HTTPS (https://github.com/user/repo.git)
   # and SCP-style SSH (git@github.com:user/repo.git) inputs.
   if [[ "$REMOTE_URL" == https://* ]]; then
-    # https://github.com/user/repo.git -> ssh://git@github.com/user/repo.git
-    SSH_URL=$(echo "$REMOTE_URL" | sed 's|https://|ssh://git@|')
+    # https://github.com/user/repo.git -> ssh://git@github.com:/user/repo.git
+    SSH_URL=$(echo "$REMOTE_URL" | sed 's|https://\([^/]*\)/|ssh://git@\1:/|')
   elif [[ "$REMOTE_URL" == git@*:* ]]; then
-    # git@github.com:user/repo.git -> ssh://git@github.com/user/repo.git
-    SSH_URL=$(echo "$REMOTE_URL" | sed 's|git@\([^:]*\):|ssh://git@\1/|')
+    # git@github.com:user/repo.git -> ssh://git@github.com:/user/repo.git
+    SSH_URL=$(echo "$REMOTE_URL" | sed 's|git@\([^:]*\):|ssh://git@\1:/|')
   else
     SSH_URL="$REMOTE_URL"
   fi
@@ -50,7 +50,7 @@ if [ ! -d ~/.local/share/chezmoi ]; then
     read -r -p "Is this a personal GitHub repository? [y/N] " perso_answer
 
     if [[ "${perso_answer}" =~ ^[Yy]$ ]]; then
-      SSH_URL="${SSH_URL/ssh:\/\/git@github.com/ssh:\/\/git@github-perso}"
+      SSH_URL="${SSH_URL/github.com/github-perso}"
     fi
   fi
 
