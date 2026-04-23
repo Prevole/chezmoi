@@ -1,46 +1,21 @@
 # =============================================================================
 # chezmoi init and dotfiles application
 #
-# Extracts SSH keys temporarily from 1Password to disk so that git/chezmoi
-# can clone the dotfiles repository via SSH. Keys are removed after apply
-# by 98-ssh-cleanup.sh — the 1Password SSH agent takes over from there.
+# Initializes chezmoi and applies the dotfiles. SSH keys are already extracted
+# temporarily to disk by 04-ssh-keys.sh and will be cleaned up by 98-ssh-cleanup.sh.
 #
 # Resolves the dotfiles repository URL from the git remote of the directory
 # containing mac-setup.sh. Converts HTTPS to SSH if needed. On a work profile,
 # offers to rewrite github.com to github-perso for personal repos.
 #
 # Restarts 1Password after chezmoi apply so the SSH agent picks up agent.toml
-# (deployed by chezmoi). chezmoi.yaml is already written by 05-chezmoi.sh so
+# (deployed by chezmoi). chezmoi.yaml is already written by 00-profile.sh so
 # promptChoiceOnce will not prompt again. User directories are created by
 # 07-directories.sh.
 # =============================================================================
 
 # Re-authenticate if the op session expired
 op whoami &>/dev/null || eval "$(op signin)"
-
-# ---------------------------------------------------------------------------
-# Extract SSH keys temporarily from 1Password to allow git clone via SSH.
-# Primary key → ~/.ssh/id_ed25519 (default key picked up by SSH automatically)
-# Personal key → ~/.ssh/<title-slug> (named key, loaded via ssh-add)
-# ---------------------------------------------------------------------------
-
-log_info "Extracting SSH keys from 1Password for git clone..."
-
-op read "op://${HOSTNAME}/${SSH_KEY_TITLE}/private key" > ~/.ssh/id_ed25519
-chmod 600 ~/.ssh/id_ed25519
-
-log_success "Primary SSH key extracted temporarily."
-
-if [[ -n "$PERSONAL_KEY_TITLE" ]]; then
-  PERSONAL_KEY_SLUG=$(echo "$PERSONAL_KEY_TITLE" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
-  PERSONAL_KEY_FILE=~/.ssh/${PERSONAL_KEY_SLUG}
-
-  op read "op://${HOSTNAME}/${PERSONAL_KEY_TITLE}/private key" > "$PERSONAL_KEY_FILE"
-  chmod 600 "$PERSONAL_KEY_FILE"
-  ssh-add "$PERSONAL_KEY_FILE" 2>/dev/null || true
-
-  log_success "Personal SSH key extracted temporarily."
-fi
 
 # ---------------------------------------------------------------------------
 # Resolve dotfiles repository URL

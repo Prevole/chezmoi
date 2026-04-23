@@ -1,12 +1,11 @@
 # =============================================================================
-# SSH key generation via 1Password and GitHub registration
+# SSH key generation and temporary extraction via 1Password
 #
 # Generates ED25519 SSH keys directly in the 1Password vault named after the
-# hostname (created by 03-1password.sh). Keys are never written to disk here —
-# they live exclusively in 1Password and are served by the SSH agent.
-#
-# A temporary extraction to disk happens later in 08-dotfiles.sh to allow
-# chezmoi to clone the dotfiles repo via SSH, then cleaned up in 98-ssh-cleanup.sh.
+# hostname (created by 03-1password.sh). Keys are never written to disk
+# permanently — they are extracted temporarily here to allow chezmoi to clone
+# the dotfiles repo via SSH, then cleaned up by 98-ssh-cleanup.sh.
+# The 1Password SSH agent takes over from there.
 #
 # Requires:
 #   PROFILE  — set by 00-profile.sh
@@ -127,4 +126,32 @@ if [[ "$PROFILE" == "work" ]]; then
       log_success "Personal SSH key added to GitHub."
     fi
   fi
+fi
+
+# ---------------------------------------------------------------------------
+# Temporary extraction to disk for git clone
+# op returns keys in PKCS#8 format (-----BEGIN PRIVATE KEY-----)
+# SSH expects OpenSSH format — convert with ssh-keygen.
+# ---------------------------------------------------------------------------
+
+log_info "Extracting SSH keys from 1Password for git clone..."
+
+op read "op://${HOSTNAME}/${SSH_KEY_TITLE}/private key" > ~/.ssh/id_ed25519_pkcs8
+chmod 600 ~/.ssh/id_ed25519_pkcs8
+ssh-keygen -p -m OpenSSH -f ~/.ssh/id_ed25519_pkcs8 -N "" -o
+mv ~/.ssh/id_ed25519_pkcs8 ~/.ssh/id_ed25519
+
+log_success "Primary SSH key extracted temporarily."
+
+if [[ -n "$PERSONAL_KEY_TITLE" ]]; then
+  PERSONAL_KEY_SLUG=$(echo "$PERSONAL_KEY_TITLE" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+  PERSONAL_KEY_FILE=~/.ssh/${PERSONAL_KEY_SLUG}
+
+  op read "op://${HOSTNAME}/${PERSONAL_KEY_TITLE}/private key" > "${PERSONAL_KEY_FILE}_pkcs8"
+  chmod 600 "${PERSONAL_KEY_FILE}_pkcs8"
+  ssh-keygen -p -m OpenSSH -f "${PERSONAL_KEY_FILE}_pkcs8" -N "" -o
+  mv "${PERSONAL_KEY_FILE}_pkcs8" "$PERSONAL_KEY_FILE"
+  ssh-add "$PERSONAL_KEY_FILE" 2>/dev/null || true
+
+  log_success "Personal SSH key extracted temporarily."
 fi
