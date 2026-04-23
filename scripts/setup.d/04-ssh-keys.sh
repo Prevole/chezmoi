@@ -54,6 +54,8 @@ log_box "Add your primary SSH key to GitHub" \
   "Open the item in 1Password, then use the autofill integration to add the" \
   "key directly to GitHub — no copy/paste needed." \
   "" \
+  "GitHub SSH keys: https://github.com/settings/keys" \
+  "" \
   "IMPORTANT: In the 1Password item, set the Hosts field to:" \
   "  ssh://git@github.com" \
   "" \
@@ -62,8 +64,6 @@ log_box "Add your primary SSH key to GitHub" \
   "" \
   "Docs — Register key for commit signing:" \
   "  https://developer.1password.com/docs/ssh/git-commit-signing#step-2-register-your-public-key"
-
-open "https://github.com/settings/keys"
 
 log_warn "If your GitHub account is managed by your organization (EMU/SSO),"
 log_warn "authorize this key for SSO: GitHub > Settings > SSH keys > Configure SSO"
@@ -111,6 +111,8 @@ if [[ "$PROFILE" == "work" ]]; then
         "Open the item in 1Password, then use the autofill integration to add the" \
         "key directly to GitHub — no copy/paste needed." \
         "" \
+        "GitHub SSH keys: https://github.com/settings/keys" \
+        "" \
         "IMPORTANT: In the 1Password item, set the Hosts field to:" \
         "  ssh://git@github-perso" \
         "" \
@@ -120,8 +122,6 @@ if [[ "$PROFILE" == "work" ]]; then
         "Docs — Register key for commit signing:" \
         "  https://developer.1password.com/docs/ssh/git-commit-signing#step-2-register-your-public-key"
 
-      open "https://github.com/settings/keys"
-
       read -r -p "Press Enter after adding the personal SSH key to your personal GitHub account..."
       log_success "Personal SSH key added to GitHub."
     fi
@@ -130,16 +130,13 @@ fi
 
 # ---------------------------------------------------------------------------
 # Temporary extraction to disk for git clone
-# op returns keys in PKCS#8 format (-----BEGIN PRIVATE KEY-----)
-# SSH expects OpenSSH format — convert with ssh-keygen.
+# Use ?ssh-format=openssh to get the key in OpenSSH format directly from op.
 # ---------------------------------------------------------------------------
 
 log_info "Extracting SSH keys from 1Password for git clone..."
 
-op read "op://${HOSTNAME}/${SSH_KEY_TITLE}/private key" > ~/.ssh/id_ed25519_pkcs8
-chmod 600 ~/.ssh/id_ed25519_pkcs8
-ssh-keygen -p -m OpenSSH -f ~/.ssh/id_ed25519_pkcs8 -N "" -o
-mv ~/.ssh/id_ed25519_pkcs8 ~/.ssh/id_ed25519
+op read "op://${HOSTNAME}/${SSH_KEY_TITLE}/private key?ssh-format=openssh" > ~/.ssh/id_ed25519
+chmod 600 ~/.ssh/id_ed25519
 
 log_success "Primary SSH key extracted temporarily."
 
@@ -147,10 +144,8 @@ if [[ -n "$PERSONAL_KEY_TITLE" ]]; then
   PERSONAL_KEY_SLUG=$(echo "$PERSONAL_KEY_TITLE" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
   PERSONAL_KEY_FILE=~/.ssh/${PERSONAL_KEY_SLUG}
 
-  op read "op://${HOSTNAME}/${PERSONAL_KEY_TITLE}/private key" > "${PERSONAL_KEY_FILE}_pkcs8"
-  chmod 600 "${PERSONAL_KEY_FILE}_pkcs8"
-  ssh-keygen -p -m OpenSSH -f "${PERSONAL_KEY_FILE}_pkcs8" -N "" -o
-  mv "${PERSONAL_KEY_FILE}_pkcs8" "$PERSONAL_KEY_FILE"
+  op read "op://${HOSTNAME}/${PERSONAL_KEY_TITLE}/private key?ssh-format=openssh" > "$PERSONAL_KEY_FILE"
+  chmod 600 "$PERSONAL_KEY_FILE"
   ssh-add "$PERSONAL_KEY_FILE" 2>/dev/null || true
 
   log_success "Personal SSH key extracted temporarily."
