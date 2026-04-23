@@ -49,11 +49,11 @@ else
   log_success "Primary SSH key created in 1Password."
 fi
 
-op read "op://${HOSTNAME}/${SSH_KEY_TITLE}/public key" | pbcopy
-
 log_box "Add your primary SSH key to GitHub" \
   "Key title : $SSH_KEY_TITLE" \
-  "Public key: copied to clipboard" \
+  "" \
+  "Open the item in 1Password, then use the autofill integration to add the" \
+  "key directly to GitHub — no copy/paste needed." \
   "" \
   "IMPORTANT: In the 1Password item, set the Hosts field to:" \
   "  ssh://git@github.com" \
@@ -106,11 +106,11 @@ if [[ "$PROFILE" == "work" ]]; then
 
       log_success "Personal SSH key created in 1Password."
 
-      op read "op://${HOSTNAME}/${PERSONAL_KEY_TITLE}/public key" | pbcopy
-
       log_box "Add your personal SSH key to GitHub" \
         "Key title : $PERSONAL_KEY_TITLE" \
-        "Public key: copied to clipboard" \
+        "" \
+        "Open the item in 1Password, then use the autofill integration to add the" \
+        "key directly to GitHub — no copy/paste needed." \
         "" \
         "IMPORTANT: In the 1Password item, set the Hosts field to:" \
         "  ssh://git@github-perso" \
