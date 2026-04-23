@@ -12,6 +12,7 @@ cask "script-debugger"
 cask "steam"
 cask "tiptoi-manager"
 
+{{ if not .is_vm }}
 mas "ifolor Designer", id: 446366603
 mas "JSON Helper", id: 453114608
 mas "1Password for Safari", id: 1569813296
@@ -19,3 +20,4 @@ mas "iMovie", id: 408981434
 mas "Keynote", id: 409183694
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
+{{ end }}

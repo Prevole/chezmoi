@@ -48,4 +48,4 @@ cask "rectangle"
 # cask "vlc"
 
 ## Profile-specific tools and applications
-{{ include (printf "profiles/%s/homebrew/Brewfile" .profile) }}
+{{ includeTemplate (printf "profiles/%s/homebrew/Brewfile.tmpl" .profile) . }}
