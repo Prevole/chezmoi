@@ -2,7 +2,7 @@
 [user]
   name = "{{- $op.name.value }}"
   email = "{{- $op.email.value }}"
-  signingkey = {{ onepasswordRead (printf "op://%s/%s - %s - ED25519/public key" .chezmoi.hostname $op.name.value .chezmoi.hostname) }}
+  signingkey = {{ onepasswordRead (printf "op://%s/%s - %s - ED25519/public key" .chezmoi.hostname .chezmoi.username .chezmoi.hostname) }}
 
 [gpg]
   format = ssh
