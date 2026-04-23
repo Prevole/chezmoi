@@ -67,6 +67,7 @@ function rep_cc() {
 
 # rep without cache — useful to debug cache vs plugin issues
 alias repnc="REP_NO_CACHE=1 rep"
+compdef repnc=rep
 
 # ---------------------------------------------------------------------------
 # Repo lookup — level 1 (rootdir/repo_name) then level 2 (rootdir/*/repo_name)
