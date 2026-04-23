@@ -28,6 +28,11 @@ _lp_build_rootdirs_cache() {
       # Expand ~ and strip trailing slash
       dir="${dir/#\~/$HOME}"
       dir="${dir%/}"
+      # If the gitdir itself is a git repo, use its parent as rootdir so that
+      # _lp_find_repos can discover it at level 1 (rootdir/repo_name).
+      if [[ -d "$dir/.git" ]]; then
+        dir="${dir:h}"
+      fi
       rootdirs+=("$dir")
     fi
   done < "$gitconfig"
