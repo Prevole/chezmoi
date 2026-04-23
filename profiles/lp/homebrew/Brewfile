@@ -1,4 +1,4 @@
-cask "battle.net"
+cask "battle-net"
 cask "dropbox"
 cask "firefox@developer-edition"
 cask "imazing"
