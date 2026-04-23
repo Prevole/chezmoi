@@ -9,8 +9,10 @@
 # containing mac-setup.sh. Converts HTTPS to SSH if needed. On a work profile,
 # offers to rewrite github.com to github-perso for personal repos.
 #
-# chezmoi.yaml is already written by 05-chezmoi.sh so promptChoiceOnce will
-# not prompt again. User directories are created by 07-directories.sh.
+# Restarts 1Password after chezmoi apply so the SSH agent picks up agent.toml
+# (deployed by chezmoi). chezmoi.yaml is already written by 05-chezmoi.sh so
+# promptChoiceOnce will not prompt again. User directories are created by
+# 07-directories.sh.
 # =============================================================================
 
 # Re-authenticate if the op session expired
@@ -88,3 +90,9 @@ if [ ! -d ~/.local/share/chezmoi ]; then
 else
   log_skip "Chezmoi already initialized. Skip."
 fi
+
+log_info "Restarting 1Password so the SSH agent picks up agent.toml..."
+killall "1Password" 2>/dev/null || true
+sleep 2
+open -a "1Password"
+read -r -p "Press Enter once 1Password is back up and the SSH agent shows as running..."

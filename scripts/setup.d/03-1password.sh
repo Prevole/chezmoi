@@ -1,22 +1,19 @@
 # =============================================================================
-# 1Password setup, vault creation, and SSH agent bootstrap
+# 1Password setup and vault creation
 #
-# Bootstraps 1Password for SSH agent use:
+# Bootstraps 1Password:
+#   - Installs 1Password and the op CLI if not already present.
 #   - Opens 1Password for login and Developer Settings configuration.
-#   - Signs in to the op CLI (re-authenticates if session expired).
+#   - Signs in to the op CLI.
 #   - Creates a vault named after the hostname via the op CLI.
 #     The agent.toml points to this vault — it must exist before chezmoi runs.
-#   - Copies agent.toml from the chezmoi source so 1Password picks it up
-#     before chezmoi runs (chicken-and-egg: agent.toml is normally deployed
-#     by chezmoi, but chezmoi needs the SSH agent to clone the repo).
-#   - Restarts 1Password so the agent picks up the configuration.
+#
+# agent.toml is deployed by chezmoi (08-dotfiles.sh), after which 1Password
+# is restarted so the SSH agent picks up the configuration.
 #
 # Exports:
-#   HOSTNAME — machine hostname (reused by 04-ssh-keys.sh and 07-dotfiles.sh)
+#   HOSTNAME — machine hostname (reused by 04-ssh-keys.sh and 08-dotfiles.sh)
 # =============================================================================
-
-AGENT_TOML_SRC="$(dirname "${BASH_SOURCE[0]}")/../../dot_config/private_1Password/private_ssh/private_agent.toml.tmpl"
-AGENT_TOML_DST="${HOME}/.config/1Password/ssh/agent.toml"
 
 if ! brew list --cask 1password &>/dev/null; then
   log_info "Installing 1Password..."
@@ -55,23 +52,3 @@ if ! op vault get "$HOSTNAME" &>/dev/null; then
 else
   log_skip "1Password vault '$HOSTNAME' already exists. Skip."
 fi
-
-if [ ! -f "$AGENT_TOML_DST" ]; then
-  log_info "Copying 1Password SSH agent config (one-shot bootstrap)..."
-
-  mkdir -p "$(dirname "$AGENT_TOML_DST")"
-  CHEZMOI_SOURCE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-  chezmoi execute-template --source "$CHEZMOI_SOURCE" < "$AGENT_TOML_SRC" > "$AGENT_TOML_DST"
-
-  log_success "1Password SSH agent config copied."
-else
-  log_skip "1Password SSH agent config already exists. Skip."
-fi
-
-log_info "Restarting 1Password to ensure the SSH agent config is loaded..."
-killall "1Password" 2>/dev/null || true
-
-sleep 2
-
-open -a "1Password"
-read -r -p "Press Enter once 1Password is back up and the SSH agent shows as running..."
