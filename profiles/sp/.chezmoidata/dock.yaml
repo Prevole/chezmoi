@@ -1,7 +1,9 @@
 dock:
   apps:
+    - /System/Applications/App Store.app
     - /System/Applications/System Settings.app
-    - /Applications/iTerm.app
+    - /System/Applications/Utilities/Activity Monitor.app
+    - /Applications/Mail.app
     - /Applications/Firefox.app
     - /Applications/Google Chrome.app
     - /System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app
