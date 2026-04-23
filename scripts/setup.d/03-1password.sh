@@ -27,6 +27,14 @@ else
   log_skip "1Password already installed. Skip."
 fi
 
+if ! brew list 1password-cli &>/dev/null; then
+  log_info "Installing 1Password CLI..."
+  brew install 1password-cli
+  log_success "1Password CLI installed."
+else
+  log_skip "1Password CLI already installed. Skip."
+fi
+
 open -a "1Password"
 read -r -p "Please log in to 1Password and complete the Developer Settings setup before proceeding. Press Enter to continue after you're done..."
 
