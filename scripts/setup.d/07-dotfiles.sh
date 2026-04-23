@@ -17,6 +17,7 @@ if [ ! -d ~/.local/share/chezmoi ]; then
 
   REPO_DIR="$(dirname "${BASH_SOURCE[0]}")/../.."
   REMOTE_URL=$(git -C "$REPO_DIR" remote get-url origin)
+  CURRENT_BRANCH=$(git -C "$REPO_DIR" branch --show-current)
 
   # Convert HTTPS to SSH if needed — SSH URLs are used as-is
   if [[ "$REMOTE_URL" == https://* ]]; then
@@ -39,9 +40,17 @@ if [ ! -d ~/.local/share/chezmoi ]; then
     fi
   fi
 
-  log_info "Repository: $SSH_URL"
+  log_info "Repository : $SSH_URL"
+  log_info "Branch     : $CURRENT_BRANCH"
 
-  chezmoi init --apply "$SSH_URL"
+  # Pass --branch only when not on the default branch
+  BRANCH_ARG=""
+  if [[ "$CURRENT_BRANCH" != "main" && "$CURRENT_BRANCH" != "master" && -n "$CURRENT_BRANCH" ]]; then
+    BRANCH_ARG="--branch $CURRENT_BRANCH"
+  fi
+
+  # shellcheck disable=SC2086
+  chezmoi init --apply $BRANCH_ARG "$SSH_URL"
 
   log_success "Dotfiles applied."
 else
