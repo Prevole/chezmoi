@@ -18,6 +18,14 @@
 AGENT_TOML_SRC="$(dirname "${BASH_SOURCE[0]}")/../../dot_config/private_1Password/private_ssh/private_agent.toml.tmpl"
 AGENT_TOML_DST="${HOME}/.config/1Password/ssh/agent.toml"
 
+if ! brew list --cask 1password &>/dev/null; then
+  log_info "Installing 1Password..."
+  brew install --cask 1password
+  log_success "1Password installed."
+else
+  log_skip "1Password already installed. Skip."
+fi
+
 open -a "1Password"
 read -r -p "Please log in to 1Password and complete the Developer Settings setup before proceeding. Press Enter to continue after you're done..."
 
