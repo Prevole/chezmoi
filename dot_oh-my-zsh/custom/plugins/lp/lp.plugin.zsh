@@ -12,8 +12,8 @@ _lp_build_rootdirs_cache() {
   local cache_file="$_lp_cache_file"
   local gitconfig="$HOME/.gitconfig"
 
-  # Return cached value if still valid
-  if [[ -f "$cache_file" && "$cache_file" -nt "$gitconfig" ]]; then
+  # Return cached value if still valid (bypass with REP_NO_CACHE=1)
+  if [[ -z "${REP_NO_CACHE:-}" && -f "$cache_file" && "$cache_file" -nt "$gitconfig" ]]; then
     cat "$cache_file"
     return
   fi
@@ -37,9 +37,11 @@ _lp_build_rootdirs_cache() {
     fi
   done < "$gitconfig"
 
-  # Write cache
-  mkdir -p "$(dirname "$cache_file")"
-  printf '%s\n' "${rootdirs[@]}" > "$cache_file"
+  # Write cache (skipped when REP_NO_CACHE=1 to avoid polluting with debug runs)
+  if [[ -z "${REP_NO_CACHE:-}" ]]; then
+    mkdir -p "$(dirname "$cache_file")"
+    printf '%s\n' "${rootdirs[@]}" > "$cache_file"
+  fi
 
   printf '%s\n' "${rootdirs[@]}"
 }
@@ -50,6 +52,15 @@ function lp_cache_refresh() {
   _lp_build_rootdirs_cache > /dev/null
   echo "lp: rootdirs cache refreshed."
 }
+
+# Clear the rootdirs cache — will be rebuilt on next rep/orep call
+function rep_cc() {
+  rm -f "$_lp_cache_file"
+  echo "lp: rootdirs cache cleared."
+}
+
+# rep without cache — useful to debug cache vs plugin issues
+alias repnc="REP_NO_CACHE=1 rep"
 
 # ---------------------------------------------------------------------------
 # Repo lookup — level 1 (rootdir/repo_name) then level 2 (rootdir/*/repo_name)
