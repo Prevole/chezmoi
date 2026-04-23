@@ -28,22 +28,19 @@ if [ ! -d ~/.local/share/chezmoi ]; then
   REMOTE_URL=$(git -C "$REPO_DIR" remote get-url origin)
   CURRENT_BRANCH=$(git -C "$REPO_DIR" branch --show-current)
 
-  # Normalize to ssh:// URL format in all cases.
-  # Handles both HTTPS (https://github.com/user/repo.git)
-  # and SCP-style SSH (git@github.com:user/repo.git) inputs.
+  # Normalize to SCP-style SSH URL (git@host:user/repo.git) — the format
+  # shown by GitHub UI and the one chezmoi passes directly to git.
+  # Handles both HTTPS and SCP inputs.
   if [[ "$REMOTE_URL" == https://* ]]; then
-    # https://github.com/user/repo.git -> ssh://git@github.com:/user/repo.git
-    SSH_URL=$(echo "$REMOTE_URL" | sed 's|https://\([^/]*\)/|ssh://git@\1:/|')
-  elif [[ "$REMOTE_URL" == git@*:* ]]; then
-    # git@github.com:user/repo.git -> ssh://git@github.com:/user/repo.git
-    SSH_URL=$(echo "$REMOTE_URL" | sed 's|git@\([^:]*\):|ssh://git@\1:/|')
+    # https://github.com/user/repo.git -> git@github.com:user/repo.git
+    SSH_URL=$(echo "$REMOTE_URL" | sed 's|https://\([^/]*\)/|\1:|' | sed 's|^|git@|')
   else
     SSH_URL="$REMOTE_URL"
   fi
 
   # On work profile, a personal GitHub repo must use the github-perso SSH alias
   # so that the SSH agent selects the personal key instead of the work key.
-  if [[ "$PROFILE" == "work" && "$SSH_URL" == *"ssh://git@github.com"* ]]; then
+  if [[ "$PROFILE" == "work" && "$SSH_URL" == *"git@github.com"* ]]; then
     log_info ""
     log_info "This dotfiles repository is hosted on github.com."
     log_info "On a work profile, personal GitHub repos should use the 'github-perso' SSH alias."
@@ -63,8 +60,13 @@ if [ ! -d ~/.local/share/chezmoi ]; then
     BRANCH_ARG="--branch $CURRENT_BRANCH"
   fi
 
+  # Force the use of the temporarily extracted key (~/.ssh/id_ed25519) and
+  # disable the SSH agent (IdentitiesOnly=yes). Without this, the 1Password
+  # agent takes priority and may offer a key that has no access to the repo
+  # (e.g. a personal key offered for a work EMU/Enterprise repo).
   # shellcheck disable=SC2086
-  chezmoi init --apply $BRANCH_ARG "$SSH_URL"
+  GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes" \
+    chezmoi init --apply $BRANCH_ARG "$SSH_URL"
 
   log_success "Dotfiles applied."
 else
