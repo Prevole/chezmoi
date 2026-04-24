@@ -35,7 +35,7 @@ esac
 
 chezmoi execute-template \
   --source "$CHEZMOI_SOURCE" \
-  --data "{\"profile\":\"$PROFILE\",\"is_vm\":$IS_VM}" \
+  --override-data "{\"profile\":\"$PROFILE\",\"is_vm\":$IS_VM}" \
   < "$BREWFILE_TMPL" > "$BREWFILE_RENDERED"
 
 log_success "Brewfile rendered."
