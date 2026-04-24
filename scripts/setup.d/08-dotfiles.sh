@@ -60,12 +60,19 @@ if [ ! -d ~/.local/share/chezmoi ]; then
     BRANCH_ARG="--branch $CURRENT_BRANCH"
   fi
 
-  # Force the use of the temporarily extracted key (~/.ssh/id_ed25519) and
-  # disable the SSH agent (IdentitiesOnly=yes). Without this, the 1Password
-  # agent takes priority and may offer a key that has no access to the repo
-  # (e.g. a personal key offered for a work EMU/Enterprise repo).
+  # Select the SSH identity to use based on the target URL:
+  #   - github-perso → personal key extracted by 04-ssh-keys.sh
+  #   - anything else → primary key (~/.ssh/id_ed25519)
+  # IdentitiesOnly=yes disables the 1Password agent so it cannot interfere.
+  if [[ "$SSH_URL" == *"github-perso"* && -n "$PERSONAL_KEY_TITLE" ]]; then
+    PERSONAL_KEY_SLUG=$(echo "$PERSONAL_KEY_TITLE" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+    SSH_IDENTITY=~/.ssh/${PERSONAL_KEY_SLUG}
+  else
+    SSH_IDENTITY=~/.ssh/id_ed25519
+  fi
+
   # shellcheck disable=SC2086
-  GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes" \
+  GIT_SSH_COMMAND="ssh -i $SSH_IDENTITY -o IdentitiesOnly=yes" \
     chezmoi init --apply $BRANCH_ARG "$SSH_URL"
 
   log_success "Dotfiles applied."
