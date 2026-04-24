@@ -150,3 +150,31 @@ if [[ -n "$PERSONAL_KEY_TITLE" ]]; then
 
   log_success "Personal SSH key extracted temporarily."
 fi
+
+# ---------------------------------------------------------------------------
+# Bootstrap SSH config
+#
+# ~/.ssh/config is normally deployed by chezmoi (08-dotfiles.sh), but chezmoi
+# needs SSH to clone the dotfiles repo first. We write a minimal config here
+# so the 1Password agent and the github-perso alias are available immediately.
+# chezmoi will overwrite this file with the full rendered version on apply.
+# ---------------------------------------------------------------------------
+
+if [[ ! -f ~/.ssh/config ]]; then
+  log_info "Writing bootstrap SSH config..."
+
+  cat > ~/.ssh/config <<'EOF'
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+Include ~/.ssh/1Password/config
+
+Match Host github-perso User git
+  Hostname github.com
+EOF
+
+  chmod 600 ~/.ssh/config
+  log_success "Bootstrap SSH config written."
+else
+  log_skip "~/.ssh/config already exists. Skip."
+fi
