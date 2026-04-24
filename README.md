@@ -121,7 +121,8 @@ The script sources each file in `setup.d/` in order. It will:
 8. Create standard user directories
 9. Apply dotfiles via chezmoi, then restart 1Password
 10. Install global runtimes via `mise install`
-11. Remove temporary SSH key files from disk
+11. Clone Git repositories from 1Password
+12. Remove temporary SSH key files from disk
 
 The profile choice is written to `~/.config/chezmoi/chezmoi.yaml` and remembered by `promptChoiceOnce`. It will not be 
 asked again on subsequent `chezmoi apply` runs.
@@ -339,6 +340,7 @@ all share the same shell environment and can pass exported variables to each oth
 | `07-directories.sh` | Create standard user directories (e.g. `~/Documents/repositories`) |
 | `08-dotfiles.sh` | Temporarily extract SSH key, initialize and apply chezmoi, restart 1Password |
 | `09-mise.sh` | Install global runtimes declared in `~/.config/mise/config.toml` via `mise install` |
+| `10-repos.sh` | Clone Git repositories listed in 1Password (`Git Repositories - <profile>`) |
 | `98-ssh-cleanup.sh` | Remove temporary SSH key files extracted during setup |
 | `99-restart.sh` | Prompt to restart |
 
