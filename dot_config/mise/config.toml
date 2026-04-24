@@ -7,6 +7,9 @@ ruby = "latest"
 terraform = "latest"
 terragrunt = "latest"
 
+"npm:media-archiver" = "latest"
+"npm:gs-download" = "latest"
+
 [settings]
 # Use precompiled Ruby binaries instead of compiling from source
 ruby.compile = false
