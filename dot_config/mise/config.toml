@@ -6,3 +6,7 @@ python = "latest"
 ruby = "latest"
 terraform = "latest"
 terragrunt = "latest"
+
+[settings]
+# Use precompiled Ruby binaries instead of compiling from source
+ruby.compile = false
