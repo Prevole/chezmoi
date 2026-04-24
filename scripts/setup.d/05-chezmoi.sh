@@ -25,6 +25,17 @@ CHEZMOI_SOURCE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 log_info "Rendering Brewfile for profile '$PROFILE'..."
 
-chezmoi execute-template --source "$CHEZMOI_SOURCE" < "$BREWFILE_TMPL" > "$BREWFILE_RENDERED"
+# Detect VM early (same logic as .chezmoi.yaml.tmpl) so that is_vm is
+# available to the Brewfile template before chezmoi init runs.
+HW_MODEL=$(sysctl -n hw.model 2>/dev/null || echo "")
+IS_VM=false
+case "$HW_MODEL" in
+  VMware*|VirtualMac*|Parallels*) IS_VM=true ;;
+esac
+
+chezmoi execute-template \
+  --source "$CHEZMOI_SOURCE" \
+  --data "{\"profile\":\"$PROFILE\",\"is_vm\":$IS_VM}" \
+  < "$BREWFILE_TMPL" > "$BREWFILE_RENDERED"
 
 log_success "Brewfile rendered."
