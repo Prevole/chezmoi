@@ -1,0 +1,17 @@
+[sync]
+# Sync disabled — local only for now.
+# To enable: configure sync_address and run:
+#   atuin register -u <username> -e <email> -p <password>
+#   atuin login -u <username> -p <password>
+#   atuin sync
+#
+# sync_address = "http://<nas-ip>:8888"
+
+[stats]
+# Commands excluded from stats (too generic to be meaningful)
+ignored_commands = [
+  "ls", "ll", "la",
+  "cd", "pwd",
+  "exit", "clear", "reset",
+  "z",
+]

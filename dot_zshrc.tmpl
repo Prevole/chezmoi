@@ -17,10 +17,7 @@ DEFAULT_USER=$(whoami)
 setopt EXTENDED_HISTORY
 setopt HIST_FIND_NO_DUPS
 
-HISTFILESIZE=
-HISTSIZE=
-
-# Disabled plugins: asdf poetry
+# Disabled plugins: asdf poetry history (history replaced by atuin)
 plugins=(
   lp
   brew copyfile
@@ -28,7 +25,6 @@ plugins=(
   docker
   eza fzf
   gh git git-extras
-  history
   mise
   mvn
   npm
@@ -82,6 +78,7 @@ fi
 eval "$(mise activate zsh)"
 eval "$(zoxide init zsh)"
 eval "$(direnv hook zsh)"
+eval "$(atuin init zsh)"
 
 # fzf — use fd as default command, enable key bindings
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
