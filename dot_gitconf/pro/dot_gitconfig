@@ -1,0 +1,17 @@
+[user]
+  name = Prevole
+  email = prevole@REDACTED.ch
+  signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICO7tptY9xdDums+z2zZGZEicyhF9zrnPnby3nNyzBnx
+
+[gpg]
+  format = ssh
+
+[gpg "ssh"]
+  program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+
+[commit]
+  gpgsign = true
+
+[github]
+  user = "REDACTED_REDACTED"
+

@@ -1,0 +1,22 @@
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+Include ~/.ssh/1Password/config
+
+Match Host github-perso User git
+  Hostname github.com
+
+#Host github-perso
+#  Hostname github.com
+#  User git
+#  IdentityFile "~/.ssh/prevole - REDACTED - ED25519.pub"
+
+#Host github.com
+#  Hostname github.com
+#  User git
+#  IdentityFile "~/.ssh/prevole - REDACTED - ED25519.pub"  
+
+#Host github-pro
+#  Hostname github.com
+#  User git
+#  IdentityFile "~/.ssh/prevole - REDACTED - ED25519.pub"

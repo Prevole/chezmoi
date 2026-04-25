@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<settings
+		xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="
+		http://maven.apache.org/SETTINGS/1.0.0
+		http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+	<servers>
+		<server>
+			<id>github</id>
+			<username>REDACTED_REDACTED</username>
+			<password>{{- (onepasswordDetailsFields "wgfzv73mb3qeafxnexlzeoxxkm").password.value }}</password>
+		</server>
+		<server>
+			<id>github-artifact-releases</id>
+			<username>REDACTED_REDACTED</username>
+			<password>{{- (onepasswordDetailsFields "wgfzv73mb3qeafxnexlzeoxxkm").password.value }}</password>
+		</server>
+	</servers>
+
+	<profiles>
+		<profile>
+			<id>internal-repositories</id>
+			<repositories>
+				<repository>
+					<id>github</id>
+					<url>https://maven.pkg.github.com/REDACTED/ghp-artifact-releases</url>
+					<releases>
+						<enabled>true</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>always</updatePolicy>
+					</snapshots>
+				</repository>
+
+				<repository>
+					<id>github-artifact-releases</id>
+					<url>https://maven.pkg.github.com/REDACTED/ghp-artifact-releases</url>
+					<releases>
+						<enabled>true</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>always</updatePolicy>
+					</snapshots>
+				</repository>
+
+				<repository>
+					<id>github-artifact-snapshots</id>
+					<url>https://maven.pkg.github.com/REDACTED/ghp-artifact-releases</url>
+					<releases>
+						<enabled>true</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>always</updatePolicy>
+					</snapshots>
+				</repository>
+			</repositories>
+
+			<pluginRepositories>
+				<pluginRepository>
+					<id>github</id>
+					<url>https://maven.pkg.github.com/REDACTED/ghp-artifact-releases</url>
+					<releases>
+						<enabled>true</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>always</updatePolicy>
+					</snapshots>
+				</pluginRepository>
+			</pluginRepositories>
+		</profile>
+	</profiles>
+
+	<activeProfiles>
+		<activeProfile>internal-repositories</activeProfile>
+	</activeProfiles>
+
+</settings>

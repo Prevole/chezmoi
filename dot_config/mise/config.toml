@@ -1,0 +1,7 @@
+[tools]
+java = "temurin-26.0.0+35"
+maven = "latest"
+node = "latest"
+python = "latest"
+terraform = "latest"
+terragrunt = "latest"

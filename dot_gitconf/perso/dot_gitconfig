@@ -1,0 +1,16 @@
+[user]
+  name = Prevole
+  email = 1104066+Prevole@users.noreply.github.com
+  signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOLPiZ/9CiIeNyE2HukpGn8V4U1fzwZLULHfi8wMroIf
+
+[gpg]
+  format = ssh
+
+[gpg "ssh"]
+  program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+
+[commit]
+  gpgsign = true
+
+[github]
+  user = "Prevole"

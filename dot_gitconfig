@@ -1,0 +1,83 @@
+[color]
+  diff = auto
+  status = auto
+  branch = auto
+  interactive = auto
+  ui = true
+
+[alias]
+  fp = push -u origin HEAD
+  pf = push --force
+  pull = pull --rebase
+  d = diff
+  dc = diff --cached
+  dsf = "!f() { [ -z \"$GIT_PREFIX\" ] || cd \"$GIT_PREFIX\" && git diff --color \"$@\" | diff-so-fancy  | less --tabs=4 -RFX; }; f"
+  dsfc = "!f() { [ -z \"$GIT_PREFIX\" ] || cd \"$GIT_PREFIX\" && git diff --cached --color \"$@\" | diff-so-fancy  | less --tabs=4 -RFX; }; f"
+  s = status
+  st = status
+  sta = status
+  stat = status
+  co = checkout
+  b = branch
+  ci = commit -m
+  ca = commit --amend
+  a = add .
+  pt = !"git push && git push --tags"
+  g = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  ga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all
+  graph = log --oneline --graph --decorate --all
+  info = !cat .git/config
+  i = info
+  ei = !vim .git/config
+  eg = !vim ~/.gitconfig
+  l = !ls -laht
+  lcb = "!f() { git fetch --prune && git branch --merged | egrep -v \"(^\\*|master|main|dev)\"; }; f"
+  cb = "!f() { git fetch --prune && git branch --merged | egrep -v \"(^\\*|master|main|dev)\" | xargs git branch -d; }; f"
+
+[pager]
+  branch = false
+
+[core]
+  excludesfile = /Users/Prevole/.gitignore
+
+[pull]
+	rebase = true
+
+[init]
+	defaultBranch = main
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[credential "https://git.intern.REDACTED.net"]
+	provider = generic
+
+[credential]
+	helper = 
+	helper = /usr/local/share/gcm-core/git-credential-manager
+
+[credential "https://dev.azure.com"]
+	useHttpPath = true
+
+[user]
+	name = Prevole
+	email = prevole@REDACTED.ch
+
+[includeIf "gitdir:~/Documents/repositories/github-perso/"]
+  path = ~/.gitconf/perso/.gitconfig
+
+[includeIf "gitdir:~/Documents/repositories/mo/"]
+  path = ~/.gitconf/pro/.gitconfig
+
+[includeIf "gitdir:~/Documents/repositories/private/"]
+  path = ~/.gitconf/pro/.gitconfig
+
+[includeIf "gitdir:~/Documents/repositories/github/"]
+  path = ~/.gitconf/pro/.gitconfig
+
+[includeIf "gitdir:~/.local/share/chezmoi/"]
+  path = ~/.gitconf/pro/.gitconfig
+

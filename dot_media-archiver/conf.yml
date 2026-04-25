@@ -1,0 +1,16 @@
+media:
+  video:
+    dir: Videos
+    ext:
+      - mp4
+      - mov
+  photo:
+    dir: Photos
+    ext:
+      - jpg
+      - jpeg
+      - png
+      - nef
+      - aae
+mode: copy
+dryRun: false
