@@ -155,6 +155,9 @@ brew bundle install --file="$BREWFILE_RENDERED"
 # it up as soon as it is set up, before chezmoi apply runs.
 # This file will be overwritten and properly managed by chezmoi afterwards.
 # ---------------------------------------------------------------------------
+open -a "1Password"
+read -r -p "Please log in to 1Password and complete the Developer Settings setup before proceeding. Press Enter to continue after you're done..."
+
 AGENT_TOML_SRC="$(dirname "$0")/../dot_config/private_1Password/private_ssh/private_agent.toml.tmpl"
 AGENT_TOML_DST="${HOME}/.config/1Password/ssh/agent.toml"
 
@@ -165,9 +168,6 @@ if [ ! -f "$AGENT_TOML_DST" ]; then
 else
   echo "1Password SSH agent config already exists. Skip."
 fi
-
-open -a "1Password"
-read -r -p "Please log in to 1Password and complete the Developer Settings setup before proceeding. Press Enter to continue after you're done..."
 
 # ---------------------------------------------------------------------------
 # Create the machine vault in 1Password.
@@ -186,12 +186,6 @@ else
   echo "1Password vault '$HOSTNAME' already exists. Skip."
 fi
 
-echo "Restarting 1Password to ensure SSH agent and keys are properly loaded..."
-killall "1Password" 2>/dev/null || true
-sleep 2
-open -a "1Password"
-read -r -p "Press Enter once 1Password is back up and the SSH agent shows as running..."
-
 echo ""
 echo "================================================================"
 echo " Manual step: import your SSH key into 1Password"
@@ -203,9 +197,11 @@ echo ""
 open ~/.ssh
 read -r -p "Press Enter once the SSH key '$SSH_KEY_TITLE' is imported into the '$HOSTNAME' vault..."
 
-echo "Restarting 1Password one more time to ensure the SSH key is fully loaded by the agent..."
+echo "Restarting 1Password to ensure the SSH key is fully loaded by the agent..."
 killall "1Password" 2>/dev/null || true
+
 sleep 2
+
 open -a "1Password"
 read -r -p "Press Enter once 1Password is back up and the SSH agent shows as running..."
 

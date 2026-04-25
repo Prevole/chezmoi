@@ -267,13 +267,7 @@ Press Enter in the terminal to continue.
 
 The script signs in to the `op` CLI and creates a vault named after your machine hostname (e.g. `MACZ7TPQVJQ0N`). This vault is required because `agent.toml` points the SSH agent to it.
 
-#### Step 3 — Restart 1Password
-
-The script restarts 1Password so it reloads the SSH agent config that was copied earlier. Without this restart, the vault defined in `agent.toml` will not be taken into account.
-
-Once 1Password is back up and the SSH agent shows as **running**, press Enter in the terminal to continue.
-
-#### Step 4 — Import the SSH key
+#### Step 3 — Import the SSH key
 
 The script opens `~/.ssh` in Finder and displays the exact title and vault to use. Import the SSH key manually:
 
@@ -284,9 +278,9 @@ The script opens `~/.ssh` in Finder and displays the exact title and vault to us
 5. Save the item.
 6. Press Enter in the terminal to continue.
 
-#### Step 5 — Final restart of 1Password
+#### Step 4 — Restart 1Password
 
-The script restarts 1Password one last time to ensure the imported SSH key is fully picked up by the agent. Once it is back up and the SSH agent shows as **running**, press Enter to continue.
+The script restarts 1Password so the imported SSH key is fully picked up by the agent. Once it is back up and the SSH agent shows as **running**, press Enter to continue.
 
 ### 5. Apply dotfiles with chezmoi
 
