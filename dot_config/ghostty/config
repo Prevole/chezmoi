@@ -1,0 +1,64 @@
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+# Active theme: Catppuccin Mocha
+# Other good ones (uncomment to switch, ghostty +list-themes to browse):
+#
+# theme = Gruvbox Dark
+# theme = Gruvbox Dark Hard
+# theme = TokyoNight Storm
+# theme = Rose Pine
+# theme = Rose Pine Moon
+# theme = Atom One Dark
+
+theme = Catppuccin Mocha
+
+# ---------------------------------------------------------------------------
+# Font
+# ---------------------------------------------------------------------------
+font-family = MesloLGM Nerd Font
+font-size = 12
+
+# ---------------------------------------------------------------------------
+# Window
+# ---------------------------------------------------------------------------
+background-opacity = 0.85
+background-blur = 20
+
+# Remove window decorations (title bar) — zellij provides its own UI
+window-decoration = false
+
+# ---------------------------------------------------------------------------
+# Shell integration
+# ---------------------------------------------------------------------------
+# Let Ghostty handle shell integration (cursor shape at prompt, etc.)
+shell-integration = zsh
+
+# ---------------------------------------------------------------------------
+# Command — auto-launch zellij
+# ---------------------------------------------------------------------------
+# Ghostty launches zellij directly on every new window.
+# Press Ctrl+d or exit zellij to close the window.
+command = /opt/homebrew/bin/zellij
+
+# ---------------------------------------------------------------------------
+# Keyboard
+# ---------------------------------------------------------------------------
+# Enable the Kitty Keyboard Protocol for better keybind support in TUI apps
+# (OpenCode, Neovim, etc.)
+# This is enabled by default in Ghostty — kept here for documentation.
+
+# ---------------------------------------------------------------------------
+# Cursor
+# ---------------------------------------------------------------------------
+cursor-style = bar
+cursor-style-blink = false
+
+# ---------------------------------------------------------------------------
+# Misc
+# ---------------------------------------------------------------------------
+# Hide mouse cursor while typing
+mouse-hide-while-typing = true
+
+# Confirm before closing a window with a running process
+confirm-close-surface = true
