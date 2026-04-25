@@ -1,0 +1,17 @@
+media:
+  mode: copy
+  dryRun: false
+  types:
+    - name: photos
+      directory: Photos
+      extensions:
+        - jpg
+        - jpeg
+        - png
+        - nef
+        - aae
+    - name: videos
+      directory: Videos
+      extensions:
+        - mp4
+        - mov

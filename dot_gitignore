@@ -34,7 +34,7 @@ target/
 # OS generated files #
 ######################
 .DS_Store
-.DS_Store?
+**/.DS_Store
 ._*
 .Spotlight-V100
 .Trashes
@@ -44,5 +44,8 @@ Thumbs.db
 *.env.json
 .env
 .envrc
+# Use .envrc.example as a versionable template — .envrc itself stays ignored
 
 .doc
+.direnv/
+*.orig

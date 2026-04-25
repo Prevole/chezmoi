@@ -7,7 +7,7 @@
 
 [alias]
   fp = push -u origin HEAD
-  pf = push --force
+  pf = push --force-with-lease
   pull = pull --rebase
   d = diff
   dc = diff --cached
@@ -28,13 +28,25 @@
   graph = log --oneline --graph --decorate --all
   info = !cat .git/config
   i = info
-  ei = !vim .git/config
-  l = !ls -laht
-  lcb = "!f() { git fetch --prune && git branch --merged | egrep -v \"(^\\*|master|main|dev)\"; }; f"
-  cb = "!f() { git fetch --prune && git branch --merged | egrep -v \"(^\\*|master|main|dev)\" | xargs git branch -d; }; f"
+  ei = !$EDITOR .git/config
+  l = !eza -la --sort=modified
+  lcb = "!f() { git fetch --prune && git branch --merged | grep -Ev \"(^\\*|master|main|dev)\"; }; f"
+  cb = "!f() { git fetch --prune && git branch --merged | grep -Ev \"(^\\*|master|main|dev)\" | xargs git branch -d; }; f"
 
 [pager]
   branch = false
+
+[rerere]
+  enabled = true
+
+[fetch]
+  prune = true
+
+[diff]
+  algorithm = histogram
+
+[branch]
+  sort = -committerdate
 
 [core]
   excludesfile = {{ .chezmoi.homeDir }}/.gitignore

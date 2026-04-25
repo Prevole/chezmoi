@@ -218,7 +218,7 @@ function repo_track() {
 # ---------------------------------------------------------------------------
 
 function fgg() {
-  find . -name "$2" -exec grep -H "$1" {} \;
+  rg "$1" --glob "$2"
 }
 
 function eprof() {
@@ -230,27 +230,85 @@ function sprof() {
 }
 
 function repos_pull() {
-  echo "#############################################"
-  find . ! -path . -type d -maxdepth 1 -exec sh -c "echo \"Pull repo: {}\" | sed -E 's/\.\///g'; git -C {} pull; echo \"#############################################\";" \;
+  local sep="#############################################"
+  echo "$sep"
+  for repo in */; do
+    [[ -d "${repo%.git}/.git" || -d "$repo.git" ]] || continue
+    echo "Pull repo: ${repo%/}"
+    git -C "$repo" pull
+    echo "$sep"
+  done
 }
 
 function repos_stat() {
-  echo "#############################################"
-  find . ! -path . -type d -maxdepth 1 -exec sh -c "echo \"Stat repo: {}\" | sed -E 's/\.\///g'; git -C {} s; echo \"#############################################\";" \;
+  local sep="#############################################"
+  echo "$sep"
+  for repo in */; do
+    [[ -d "${repo%.git}/.git" || -d "$repo.git" ]] || continue
+    echo "Stat repo: ${repo%/}"
+    git -C "$repo" s
+    echo "$sep"
+  done
 }
 
 function cedit() {
   $EDITOR "$(chezmoi source-path)/$1"
 }
 
-function update() {
-  echo "Updating..."
+function _cedit() {
+  local source_dir
+  source_dir="$(chezmoi source-path 2>/dev/null)" || return 1
 
-  echo "Updating oh-my-zsh..."
+  local -a files display
+  local f name
+
+  for f in "$source_dir"/*(N); do
+    name="${f:t}"
+    name="${name#dot_}"
+    name="${name#executable_}"
+    name="${name#private_}"
+    name="${name#readonly_}"
+    name="${name%.tmpl}"
+    name=".${name}"
+    files+=("${f:t}")
+    display+=("$name")
+  done
+
+  compadd -U -Q -d display -a files
+}
+
+compdef _cedit cedit
+
+function mega-update() {
+  local sep="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  echo "$sep"
+  echo "chezmoi"
+  echo "$sep"
+  chezmoi update
+
+  echo "$sep"
+  echo "brew"
+  echo "$sep"
+  brew update && brew upgrade && brew cleanup
+
+  echo "$sep"
+  echo "oh-my-zsh"
+  echo "$sep"
   omz update
 
-  echo "Updating brew..."
-  brew update
-  brew upgrade
-  brew cleanup
+  echo "$sep"
+  echo "mise"
+  echo "$sep"
+  mise self-update --yes
+  mise upgrade --yes
+
+  echo "$sep"
+  echo "gh extensions"
+  echo "$sep"
+  gh extension upgrade --all
+
+  echo "$sep"
+  echo "mega-update done"
+  echo "$sep"
 }
