@@ -55,9 +55,5 @@ cask "rectangle"
 # cask "typora"
 # cask "vlc"
 
-{{ if .fullSetup }}
-
-{{ end -}}
-
-## Profile specific tools and applications
+## Profile-specific tools and applications
 {{ include (printf "profiles/%s/homebrew/Brewfile" .profile) }}

@@ -1,5 +1,4 @@
 {{- $profile := promptChoiceOnce . "profile" "Profile" (list "work" "lp" "sp") }}
-{{- $fullSetup := promptChoiceOnce . "fullSetup" "Full setup (install all tools for this profile)?" (list "yes" "no") | eq "yes" }}
 
 git:
   autoCommit: true
@@ -7,4 +6,3 @@ git:
 
 data:
   profile: {{ $profile }}
-  fullSetup: {{ $fullSetup }}
