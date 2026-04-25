@@ -7,4 +7,4 @@ git:
 data:
   profile: {{ $profile }}
 
-  {{ include (printf "profiles/%s/.chezmoidata/dock.yaml" $profile) | fromYaml | toYaml }}
+{{ include (printf "profiles/%s/.chezmoidata/dock.yaml" $profile) | fromYaml | toYaml | indent 2 }}

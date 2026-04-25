@@ -1,5 +1,5 @@
 {{- $op := onepasswordDetailsFields "wgfzv73mb3qeafxnexlzeoxxkm" -}}
-{{- $gitOp := onepasswordDetailsFields "ahzxvdiv25gs2afzpmyquv2yqy" -}}
+{{- $gitOp := onepasswordItemFields "ahzxvdiv25gs2afzpmyquv2yqy" -}}
 <?xml version="1.0" encoding="UTF-8" ?>
 <settings
 		xmlns="http://maven.apache.org/SETTINGS/1.0.0"
@@ -29,45 +29,45 @@
 			<repositories>
 				<repository>
 					<id>github</id>
-					<url>https://maven.pkg.github.com/{{- $op.organisation.value }}/ghp-artifact-releases</url>
-					<releases>
-						<enabled>true</enabled>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>always</updatePolicy>
-					</snapshots>
-				</repository>
+				<url>https://maven.pkg.github.com/{{- $gitOp.organisation.value }}/ghp-artifact-releases</url>
+				<releases>
+					<enabled>true</enabled>
+				</releases>
+				<snapshots>
+					<enabled>true</enabled>
+					<updatePolicy>always</updatePolicy>
+				</snapshots>
+			</repository>
 
-				<repository>
-					<id>github-artifact-releases</id>
-					<url>https://maven.pkg.github.com/{{- $op.organisation.value }}/ghp-artifact-releases</url>
-					<releases>
-						<enabled>true</enabled>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>always</updatePolicy>
-					</snapshots>
-				</repository>
+			<repository>
+				<id>github-artifact-releases</id>
+				<url>https://maven.pkg.github.com/{{- $gitOp.organisation.value }}/ghp-artifact-releases</url>
+				<releases>
+					<enabled>true</enabled>
+				</releases>
+				<snapshots>
+					<enabled>true</enabled>
+					<updatePolicy>always</updatePolicy>
+				</snapshots>
+			</repository>
 
-				<repository>
-					<id>github-artifact-snapshots</id>
-					<url>https://maven.pkg.github.com/{{- $op.organisation.value }}/ghp-artifact-releases</url>
-					<releases>
-						<enabled>true</enabled>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>always</updatePolicy>
-					</snapshots>
-				</repository>
-			</repositories>
+			<repository>
+				<id>github-artifact-snapshots</id>
+				<url>https://maven.pkg.github.com/{{- $gitOp.organisation.value }}/ghp-artifact-releases</url>
+				<releases>
+					<enabled>true</enabled>
+				</releases>
+				<snapshots>
+					<enabled>true</enabled>
+					<updatePolicy>always</updatePolicy>
+				</snapshots>
+			</repository>
+		</repositories>
 
-			<pluginRepositories>
-				<pluginRepository>
-					<id>github</id>
-					<url>https://maven.pkg.github.com/{{- $op.organisation.value }}/ghp-artifact-releases</url>
+		<pluginRepositories>
+			<pluginRepository>
+				<id>github</id>
+				<url>https://maven.pkg.github.com/{{- $gitOp.organisation.value }}/ghp-artifact-releases</url>
 
 					<releases>
 						<enabled>true</enabled>
