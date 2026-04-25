@@ -206,29 +206,22 @@ if ! op item get "$SSH_KEY_TITLE" --vault "$HOSTNAME" &>/dev/null; then
   SSH_FINGERPRINT=$(ssh-keygen -lf ~/.ssh/id_ed25519.pub | awk '{print $2}')
   SSH_KEY_TYPE=$(ssh-keygen -lf ~/.ssh/id_ed25519.pub | awk '{print $NF}' | tr -d '()')
 
-  # 1Password expects PKCS8 format for the SSHKEY field type.
-  # OpenSSH format (-----BEGIN OPENSSH PRIVATE KEY-----) is stored as plain text.
-  # Converting to PKCS8 (-----BEGIN PRIVATE KEY-----) ensures the field is concealed in the UI.
-  SSH_KEY_PKCS8=$(openssl pkey -in ~/.ssh/id_ed25519 -out - 2>/dev/null)
-
+  SSH_KEY_TEMPLATE_SRC="$(dirname "$0")/1password-ssh-key-template.json"
   SSH_KEY_TEMPLATE_FILE=$(mktemp /tmp/ssh-key-template.XXXXXX.json)
-  op item template get "SSH Key" \
-    | jq \
-      --arg key "$SSH_KEY_PKCS8" \
-      --arg title "$SSH_KEY_TITLE" \
-      --arg pubkey "$SSH_PUBLIC_KEY" \
-      --arg fingerprint "$SSH_FINGERPRINT" \
-      --arg keytype "$SSH_KEY_TYPE" \
-      '
-        .title = $title |
-        .fields[1].value = $key |
-        .fields += [
-          {"id": "public_key",  "type": "STRING", "label": "public key",  "value": $pubkey},
-          {"id": "fingerprint", "type": "STRING", "label": "fingerprint", "value": $fingerprint},
-          {"id": "key_type",    "type": "STRING", "label": "key type",    "value": $keytype}
-        ]
-      ' \
-    > "$SSH_KEY_TEMPLATE_FILE"
+  jq \
+    --rawfile key ~/.ssh/id_ed25519 \
+    --arg title "$SSH_KEY_TITLE" \
+    --arg pubkey "$SSH_PUBLIC_KEY" \
+    --arg fingerprint "$SSH_FINGERPRINT" \
+    --arg keytype "$SSH_KEY_TYPE" \
+    '
+      .title = $title |
+      .fields[1].value = $key |
+      .fields[2].value = $pubkey |
+      .fields[3].value = $fingerprint |
+      .fields[4].value = $keytype
+    ' \
+    "$SSH_KEY_TEMPLATE_SRC" > "$SSH_KEY_TEMPLATE_FILE"
 
   op item create --vault "$HOSTNAME" --template "$SSH_KEY_TEMPLATE_FILE"
   rm -f "$SSH_KEY_TEMPLATE_FILE"
