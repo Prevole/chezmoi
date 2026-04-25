@@ -56,9 +56,20 @@ cask "rectangle"
 # cask "vlc"
 
 {{ if .fullSetup }}
-{{ include "dot_homebrew/full-setup.Brewfile" }}
+## Full personal-specific tools and applications
+
+cask "firefox@developer-edition"
+cask "jetbrains-toolbox"
+cask "obsidian"
 {{ end -}}
 
 {{ if eq .setupType "work" }}
-{{ include "dot_homebrew/work.Brewfile" }}
+## Work-specific tools and applications
+
+tap "microsoft/git"
+
+brew "azure-cli"
+
+cask "git-credential-manager"
+cask "rancher"
 {{ end -}}
