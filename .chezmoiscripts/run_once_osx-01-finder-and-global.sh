@@ -18,4 +18,7 @@ defaults write NSGlobalDomain AppleScrollerPagingBehavior -bool true  # ok
 # defaults write com.apple.Spotlight MenuItemHidden -int 1            # avoid
 # legacy -> use UI: System Settings > Menu Bar > Spotlight
 
+# Finder - allow quitting via Cmd+Q
+defaults write com.apple.finder QuitMenuItem -bool true  # ok
+
 mark_restart_needed Finder

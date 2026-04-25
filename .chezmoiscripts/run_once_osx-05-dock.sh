@@ -31,4 +31,10 @@ defaults write com.apple.dock autohide-delay -float 0             # legacy kept
 # Dock - hide recent apps
 defaults write com.apple.dock show-recents -bool false            # ok
 
+# Dock - disable launch animation (bounce)
+defaults write com.apple.dock launchanim -bool false              # ok
+
+# Mission Control - group windows by app in Exposé
+defaults write com.apple.dock expose-group-by-app -bool true      # ok
+
 mark_restart_needed Dock

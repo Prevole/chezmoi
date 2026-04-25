@@ -26,9 +26,6 @@ defaults write com.apple.Safari SuppressSearchSuggestions -bool true || true    
 # Safari - show full URL
 defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true || true                                              # ok
 
-# Safari - Do Not Track
-defaults write com.apple.Safari SendDoNotTrackHTTPHeader -bool true || true                                                   # legacy kept
-
 # Safari - auto-update extensions
 defaults write com.apple.Safari InstallExtensionUpdatesAutomatically -bool true || true                                       # ok
 
