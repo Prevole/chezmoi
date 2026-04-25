@@ -300,7 +300,6 @@ function mega-update() {
   echo "$sep"
   echo "mise"
   echo "$sep"
-  mise self-update --yes
   mise upgrade --yes
 
   echo "$sep"
