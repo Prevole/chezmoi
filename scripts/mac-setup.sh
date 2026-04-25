@@ -47,11 +47,20 @@ else
   fi
 fi
 
-echo "Disabling startup sound..."
-sudo nvram SystemAudioVolume=" "
+CURRENT_AUDIO_VOLUME=$(nvram SystemAudioVolume 2>/dev/null | awk '{print $2}' || echo "unset")
+if [[ "$CURRENT_AUDIO_VOLUME" == " " ]]; then
+  echo "Startup sound already disabled. Skip."
+else
+  echo "Disabling startup sound..."
+  sudo nvram SystemAudioVolume=" "
+fi
 
-echo "Installing Rosetta 2..."
-softwareupdate --install-rosetta --agree-to-license
+if [ -f /usr/libexec/rosetta/oahd ]; then
+  echo "Rosetta 2 already installed. Skip."
+else
+  echo "Installing Rosetta 2..."
+  softwareupdate --install-rosetta --agree-to-license
+fi
 
 if [ ! -d ~/.ssh ]; then
   echo "SSH directory not found. Creating SSH directory..."
