@@ -241,16 +241,14 @@ This will:
 
 ### 4. Set up 1Password
 
-When the script pauses for 1Password, complete the following steps **before** pressing Enter. The SSH agent config has already been copied by the script so that 1Password can pick it up immediately.
+The script guides you through 1Password setup in several pauses. Here is the full sequence:
 
-#### Sign in and set up vaults
+#### Step 1 — Sign in and configure Developer settings
 
-1. Open 1Password and sign in to your account.
-2. Make sure your vaults are accessible.
+The script opens 1Password and pauses. Complete the following before pressing Enter:
 
-#### Configure Developer settings
-
-Go to **1Password → Settings → Developer** and configure exactly as shown below:
+1. Sign in to your 1Password account.
+2. Go to **1Password → Settings → Developer** and configure exactly as shown below:
 
 ![1Password Developer Settings](doc/1password-devsettings.png)
 
@@ -263,31 +261,32 @@ Go to **1Password → Settings → Developer** and configure exactly as shown be
 | Generate SSH config file with bookmarked hosts | ✅ enabled |
 | Integrate with 1Password CLI | ✅ enabled |
 
-#### Restart 1Password
+Press Enter in the terminal to continue.
 
-After saving the Developer settings, **restart 1Password** so it reloads the SSH agent config that was copied by the script. Without this restart, the vault defined in `agent.toml` will not be taken into account.
+#### Step 2 — Create the machine vault
+
+The script signs in to the `op` CLI and creates a vault named after your machine hostname (e.g. `MACZ7TPQVJQ0N`). This vault is required because `agent.toml` points the SSH agent to it.
+
+#### Step 3 — Restart 1Password
+
+The script restarts 1Password so it reloads the SSH agent config that was copied earlier. Without this restart, the vault defined in `agent.toml` will not be taken into account.
 
 Once 1Password is back up and the SSH agent shows as **running**, press Enter in the terminal to continue.
 
-#### Create the machine vault and import the SSH key
+#### Step 4 — Import the SSH key
 
-**Why this is necessary:** the `agent.toml` config points the 1Password SSH agent to a vault named after the machine hostname. For the SSH agent to serve the key to Git and GitHub, the vault must exist and the SSH key must be stored in it. Without this, `chezmoi init` and all subsequent SSH operations will fail.
+The script opens `~/.ssh` in Finder and displays the exact title and vault to use. Import the SSH key manually:
 
-The setup script handles this automatically via the `op` CLI:
-- Signs in to 1Password CLI (`op signin`)
-- Creates a vault named `<hostname>` if it does not already exist
-- Imports `~/.ssh/id_rsa` as an SSH Key entry titled `<username> - <hostname> - ED25519`
-
-**Manual fallback** (if the automated step fails):
-
-1. Open 1Password and create a new vault named after your machine hostname:
-   ```sh
-   hostname  # to get the exact name to use
-   ```
-2. In the new vault, create a new item: **New Item → SSH Key**.
-3. Title it exactly: `<username> - <hostname> - ED25519`
-4. In the **Private Key** field, import `~/.ssh/id_rsa`.
+1. In 1Password, go to **Developer Settings → SSH Keys → Add SSH Key** (or **New Item → SSH Key** in the target vault).
+2. Select the vault named after your hostname (e.g. `MACZ7TPQVJQ0N`).
+3. Title it exactly as shown in the terminal: `<username> - <hostname> - ED25519`
+4. In the **Private Key** field, import `~/.ssh/id_ed25519` from the Finder window that opened.
 5. Save the item.
+6. Press Enter in the terminal to continue.
+
+#### Step 5 — Final restart of 1Password
+
+The script restarts 1Password one last time to ensure the imported SSH key is fully picked up by the agent. Once it is back up and the SSH agent shows as **running**, press Enter to continue.
 
 ### 5. Apply dotfiles with chezmoi
 

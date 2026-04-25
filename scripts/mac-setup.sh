@@ -167,24 +167,11 @@ else
 fi
 
 open -a "1Password"
-read -r -p "Please log in to 1Password and complete the setup before proceeding. Press Enter to continue after you're done..."
-
-echo "Restarting 1Password to ensure SSH agent and keys are properly loaded..."
-killall "1Password" 2>/dev/null || true
-
-sleep 2
-
-open -a "1Password"
-read -r -p "Press Enter once 1Password is back up and the SSH agent shows as running..."
+read -r -p "Please log in to 1Password and complete the Developer Settings setup before proceeding. Press Enter to continue after you're done..."
 
 # ---------------------------------------------------------------------------
-# Create the machine vault in 1Password and import the SSH key.
-# This is required so that the 1Password SSH agent can serve the key to Git
-# and GitHub via SSH. The agent.toml config points to a vault named after the
-# machine hostname — if this vault or the key entry does not exist, chezmoi
-# init (and all subsequent SSH operations) will fail.
-# The vault and key entry are created automatically below via the op CLI.
-# If this step fails, refer to the README for the manual fallback procedure.
+# Create the machine vault in 1Password.
+# The agent.toml config points to a vault named after the machine hostname.
 # ---------------------------------------------------------------------------
 HOSTNAME=$(hostname)
 SSH_KEY_TITLE="$(whoami) - ${HOSTNAME} - ED25519"
@@ -199,29 +186,28 @@ else
   echo "1Password vault '$HOSTNAME' already exists. Skip."
 fi
 
-if ! op item get "$SSH_KEY_TITLE" --vault "$HOSTNAME" &>/dev/null; then
-  echo "Importing SSH key into 1Password vault '$HOSTNAME'..."
+echo "Restarting 1Password to ensure SSH agent and keys are properly loaded..."
+killall "1Password" 2>/dev/null || true
+sleep 2
+open -a "1Password"
+read -r -p "Press Enter once 1Password is back up and the SSH agent shows as running..."
 
-  SSH_PUBLIC_KEY=$(cat ~/.ssh/id_ed25519.pub)
-  SSH_FINGERPRINT=$(ssh-keygen -lf ~/.ssh/id_ed25519.pub | awk '{print $2}')
-  SSH_KEY_TYPE=$(ssh-keygen -lf ~/.ssh/id_ed25519.pub | awk '{print $NF}' | tr -d '()')
+echo ""
+echo "================================================================"
+echo " Manual step: import your SSH key into 1Password"
+echo " Title to use: $SSH_KEY_TITLE"
+echo " Vault to use: $HOSTNAME"
+echo " 1Password > Developer Settings > SSH Keys > Add SSH Key"
+echo "================================================================"
+echo ""
+open ~/.ssh
+read -r -p "Press Enter once the SSH key '$SSH_KEY_TITLE' is imported into the '$HOSTNAME' vault..."
 
-  op item create \
-    --category "SSH Key" \
-    --vault "$HOSTNAME" \
-    --title "$SSH_KEY_TITLE" \
-    --template <(op item template get "SSH Key" | jq --rawfile key ~/.ssh/id_ed25519 '.fields[1].value = $key')
-
-  op item edit "$SSH_KEY_TITLE" \
-    --vault "$HOSTNAME" \
-    "public key[text]=$SSH_PUBLIC_KEY" \
-    "fingerprint[text]=$SSH_FINGERPRINT" \
-    "key type[text]=$SSH_KEY_TYPE"
-
-  echo "SSH key imported as '$SSH_KEY_TITLE'."
-else
-  echo "SSH key entry '$SSH_KEY_TITLE' already exists in vault '$HOSTNAME'. Skip."
-fi
+echo "Restarting 1Password one more time to ensure the SSH key is fully loaded by the agent..."
+killall "1Password" 2>/dev/null || true
+sleep 2
+open -a "1Password"
+read -r -p "Press Enter once 1Password is back up and the SSH agent shows as running..."
 
 if [ ! -d ~/.local/share/chezmoi ]; then
   echo "Chezmoi not found. Initializing chezmoi with your dotfiles repository..."
