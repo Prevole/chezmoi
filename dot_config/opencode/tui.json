@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "keybinds": {
+    // Leader key: ctrl+x
+    // Most actions require pressing ctrl+x first, then the shortcut key.
+    // This avoids conflicts with terminal multiplexers such as zellij.
+    //
+    // Zellij cohabitation — Option A (mode locked):
+    //   When running OpenCode inside a zellij pane, use Ctrl+g to switch
+    //   zellij into "locked" mode before interacting with OpenCode.
+    //   In locked mode, zellij forwards all keystrokes to the active pane.
+    //   Press Ctrl+g again to return to normal zellij mode.
+    "leader": "ctrl+x"
+  }
+}
