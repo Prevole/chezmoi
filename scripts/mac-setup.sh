@@ -202,11 +202,13 @@ fi
 if ! op item get "$SSH_KEY_TITLE" --vault "$HOSTNAME" &>/dev/null; then
   echo "Importing SSH key into 1Password vault '$HOSTNAME'..."
 
-  op item create \
-    --category "SSH Key" \
-    --vault "$HOSTNAME" \
-    --title "$SSH_KEY_TITLE" \
-    "private key[sshkey]=~/.ssh/id_ed25519"
+  SSH_KEY_TEMPLATE_FILE=$(mktemp /tmp/ssh-key-template.XXXXXX.json)
+  op item template get "SSH Key" \
+    | jq --rawfile key ~/.ssh/id_ed25519 '.title = "'"$SSH_KEY_TITLE"'" | .fields[1].value = $key' \
+    > "$SSH_KEY_TEMPLATE_FILE"
+
+  op item create --vault "$HOSTNAME" --template "$SSH_KEY_TEMPLATE_FILE"
+  rm -f "$SSH_KEY_TEMPLATE_FILE"
 
   echo "SSH key imported as '$SSH_KEY_TITLE'."
 else
