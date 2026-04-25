@@ -199,6 +199,10 @@ function repos_stat() {
   find . ! -path . -type d -maxdepth 1 -exec sh -c "echo \"Stat repo: {}\" | sed -E 's/\.\///g'; git -C {} s; echo \"#############################################\";" \;
 }
 
+function cedit() {
+  $EDITOR "$(chezmoi source-path)/$1"
+}
+
 function update() {
   echo "Updating..."
 
