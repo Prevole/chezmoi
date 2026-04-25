@@ -166,6 +166,7 @@ else
   echo "1Password SSH agent config already exists. Skip."
 fi
 
+open -a "1Password"
 read -r -p "Please log in to 1Password and complete the setup before proceeding. Press Enter to continue after you're done..."
 
 echo "Restarting 1Password to ensure SSH agent and keys are properly loaded..."
@@ -205,7 +206,7 @@ if ! op item get "$SSH_KEY_TITLE" --vault "$HOSTNAME" &>/dev/null; then
     --category "SSH Key" \
     --vault "$HOSTNAME" \
     --title "$SSH_KEY_TITLE" \
-    "private key[private key]=~/.ssh/id_ed25519"
+    "private key[sshkey]=~/.ssh/id_ed25519"
 
   echo "SSH key imported as '$SSH_KEY_TITLE'."
 else
