@@ -17,12 +17,12 @@ theme = Catppuccin Mocha
 # Font
 # ---------------------------------------------------------------------------
 font-family = MesloLGM Nerd Font
-font-size = 12
+font-size = 13
 
 # ---------------------------------------------------------------------------
 # Window
 # ---------------------------------------------------------------------------
-background-opacity = 0.85
+background-opacity = 0.80
 background-blur = 20
 
 # Remove window decorations (title bar) — zellij provides its own UI
