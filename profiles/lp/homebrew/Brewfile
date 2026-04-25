@@ -1,0 +1,3 @@
+cask "firefox@developer-edition"
+cask "jetbrains-toolbox"
+cask "obsidian"

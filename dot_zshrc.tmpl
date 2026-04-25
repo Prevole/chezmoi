@@ -23,7 +23,27 @@ HISTFILESIZE=
 HISTSIZE=
 
 # Disabled plugins: asdf poetry
-plugins=(lp brew copyfile direnv docker eza fzf gh git git-extras history mise mvn npm macos uv vagrant zsh-autosuggestions zsh-syntax-highlighting{{ if eq .setupType "work" }} lppro{{ end }})
+plugins=(
+  lp
+  brew copyfile
+  direnv
+  docker
+  eza fzf
+  gh git git-extras
+  history
+  mise
+  mvn
+  npm
+  macos
+  uv
+  vagrant
+  zsh-autosuggestions zsh-syntax-highlighting
+)
+
+# Profile-specific plugin augmentation
+{{ if eq .profile "work" -}}
+plugins+=(lppro)
+{{- end }}
 
 source $ZSH/oh-my-zsh.sh
 

@@ -52,7 +52,12 @@
 	process = git-lfs filter-process
 	required = true
 
-{{ if eq .setupType "work" }}
+[includeIf "gitdir:~/.local/share/chezmoi/"]
+  path = ~/.gitconf/perso.config
+
+{{ if eq .profile "work" }}
+{{- /* Work profile: repositories are split between a personal and a professional
+       directory, each using their own git identity and signing key. */ -}}
 [includeIf "gitdir:~/Documents/repositories/perso/"]
   path = ~/.gitconf/perso.config
 
@@ -60,10 +65,8 @@
   path = ~/.gitconf/pro.config
 {{ end -}}
 
-{{ if eq .setupType "personal" }}
+{{ if ne .profile "work" }}
+{{- /* Non-work profile: all repositories use the personal git identity. */ -}}
 [includeIf "gitdir:~/Documents/repositories/"]
   path = ~/.gitconf/perso.config
 {{ end -}}
-
-[includeIf "gitdir:~/.local/share/chezmoi/"]
-  path = ~/.gitconf/perso.config

@@ -3,7 +3,10 @@ Host *
 
 Include ~/.ssh/1Password/config
 
-{{ if eq .setupType "work" }}
+{{ if eq .profile "work" }}
+# Work profile: both a professional and a personal GitHub account are used
+# in parallel. The github-perso host alias routes personal SSH connections
+# through the personal key while the default github.com uses the work key.
 Match Host github-perso User git
   Hostname github.com
 {{ end -}}

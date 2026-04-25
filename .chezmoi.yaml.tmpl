@@ -1,12 +1,10 @@
-{{- $setupType := promptChoiceOnce . "setupType" "Setup type" (list "personal" "work") }}
-{{- $fullSetup := promptChoiceOnce . "fullSetup" "Full setup (install all tools for this setup type)?" (list "yes" "no") | eq "yes" }}
-{{- $profile := promptStringOnce . "profile" "Profile name (used to load git repositories from 1Password)" }}
+{{- $profile := promptChoiceOnce . "profile" "Profile" (list "work" "lp" "sp") }}
+{{- $fullSetup := promptChoiceOnce . "fullSetup" "Full setup (install all tools for this profile)?" (list "yes" "no") | eq "yes" }}
 
 git:
   autoCommit: true
   autoPush: true
 
 data:
-  setupType: {{ $setupType }}
-  fullSetup: {{ $fullSetup }}
   profile: {{ $profile }}
+  fullSetup: {{ $fullSetup }}
