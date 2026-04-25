@@ -206,25 +206,17 @@ if ! op item get "$SSH_KEY_TITLE" --vault "$HOSTNAME" &>/dev/null; then
   SSH_FINGERPRINT=$(ssh-keygen -lf ~/.ssh/id_ed25519.pub | awk '{print $2}')
   SSH_KEY_TYPE=$(ssh-keygen -lf ~/.ssh/id_ed25519.pub | awk '{print $NF}' | tr -d '()')
 
-  SSH_KEY_TEMPLATE_SRC="$(dirname "$0")/1password-ssh-key-template.json"
-  SSH_KEY_TEMPLATE_FILE=$(mktemp /tmp/ssh-key-template.XXXXXX.json)
-  jq \
-    --rawfile key ~/.ssh/id_ed25519 \
-    --arg title "$SSH_KEY_TITLE" \
-    --arg pubkey "$SSH_PUBLIC_KEY" \
-    --arg fingerprint "$SSH_FINGERPRINT" \
-    --arg keytype "$SSH_KEY_TYPE" \
-    '
-      .title = $title |
-      .fields[1].value = $key |
-      .fields[2].value = $pubkey |
-      .fields[3].value = $fingerprint |
-      .fields[4].value = $keytype
-    ' \
-    "$SSH_KEY_TEMPLATE_SRC" > "$SSH_KEY_TEMPLATE_FILE"
+  op item create \
+    --category "SSH Key" \
+    --vault "$HOSTNAME" \
+    --title "$SSH_KEY_TITLE" \
+    --template <(op item template get "SSH Key" | jq --rawfile key ~/.ssh/id_ed25519 '.fields[1].value = $key')
 
-  op item create --vault "$HOSTNAME" --template "$SSH_KEY_TEMPLATE_FILE"
-  rm -f "$SSH_KEY_TEMPLATE_FILE"
+  op item edit "$SSH_KEY_TITLE" \
+    --vault "$HOSTNAME" \
+    "public key[text]=$SSH_PUBLIC_KEY" \
+    "fingerprint[text]=$SSH_FINGERPRINT" \
+    "key type[text]=$SSH_KEY_TYPE"
 
   echo "SSH key imported as '$SSH_KEY_TITLE'."
 else
