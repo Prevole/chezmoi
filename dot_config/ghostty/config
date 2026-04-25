@@ -26,7 +26,7 @@ background-opacity = 0.80
 background-blur = 20
 
 # Remove window decorations (title bar) — zellij provides its own UI
-window-decoration = false
+# window-decoration = false
 
 # ---------------------------------------------------------------------------
 # Shell integration
@@ -35,18 +35,20 @@ window-decoration = false
 shell-integration = zsh
 
 # ---------------------------------------------------------------------------
-# Command — auto-launch zellij
+# Command
 # ---------------------------------------------------------------------------
-# Ghostty launches zellij directly on every new window.
-# Press Ctrl+d or exit zellij to close the window.
-command = /opt/homebrew/bin/zellij
+# Default: launch $SHELL (zsh).
+# To launch zellij manually: just type `zellij` in the prompt.
+# command = /opt/homebrew/bin/zellij
 
 # ---------------------------------------------------------------------------
 # Keyboard
 # ---------------------------------------------------------------------------
-# Enable the Kitty Keyboard Protocol for better keybind support in TUI apps
-# (OpenCode, Neovim, etc.)
-# This is enabled by default in Ghostty — kept here for documentation.
+# Treat macOS Option key as Alt for readline/zsh word navigation
+# (Alt+left/right to jump words, Alt+backspace to delete word, etc.)
+# "left" applies only to the left Option key, keeping right Option for
+# macOS special characters (accents, symbols).
+macos-option-as-alt = left
 
 # ---------------------------------------------------------------------------
 # Cursor
