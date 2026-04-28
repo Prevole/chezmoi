@@ -62,5 +62,9 @@ cursor-style-blink = false
 # Hide mouse cursor while typing
 mouse-hide-while-typing = true
 
+# Copy selection to system clipboard automatically
+# Use Shift+drag to select when inside Zellij (bypasses Zellij mouse capture)
+copy-on-select = clipboard
+
 # Confirm before closing a window with a running process
 confirm-close-surface = true
