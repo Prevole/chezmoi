@@ -1,6 +1,7 @@
 {{- $profile := promptChoiceOnce . "profile" "Profile" (list "work" "lp" "sp") }}
 {{- $hwModel := output "sysctl" "-n" "hw.model" | trim }}
 {{- $isVM := or (hasPrefix "VMware" $hwModel) (hasPrefix "VirtualMac" $hwModel) (hasPrefix "Parallels" $hwModel) }}
+{{- $gitRoot := "~/Documents/repositories" }}
 
 git:
   autoCommit: true
@@ -9,5 +10,6 @@ git:
 data:
   profile: {{ $profile }}
   is_vm: {{ $isVM }}
+  git_root: {{ $gitRoot }}
 
 {{ include (printf "profiles/%s/.chezmoidata/dock.yaml" $profile) | fromYaml | toYaml | indent 2 }}

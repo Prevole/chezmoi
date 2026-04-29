@@ -69,15 +69,15 @@
 {{ if eq .profile "work" }}
 {{- /* Work profile: repositories are split between a personal and a professional
        directory, each using their own git identity and signing key. */ -}}
-[includeIf "gitdir:~/Documents/repositories/perso/"]
+[includeIf "gitdir:{{ .git_root }}/perso/"]
   path = ~/.gitconf/perso.config
 
-[includeIf "gitdir:~/Documents/repositories/work/"]
+[includeIf "gitdir:{{ .git_root }}/work/"]
   path = ~/.gitconf/pro.config
 {{ end -}}
 
 {{ if ne .profile "work" }}
 {{- /* Non-work profile: all repositories use the personal git identity. */ -}}
-[includeIf "gitdir:~/Documents/repositories/"]
+[includeIf "gitdir:{{ .git_root }}/"]
   path = ~/.gitconf/perso.config
 {{ end -}}

@@ -70,6 +70,125 @@ alias repnc="REP_NO_CACHE=1 rep"
 compdef repnc=rep
 
 # ---------------------------------------------------------------------------
+# gclone — git clone with automatic SSH host selection
+#
+# Usage: gclone <org>/<repo> [target-dir]
+#        gclone <org>/<repo>.git [target-dir]
+#
+# The SSH host is chosen based on the current working directory and the
+# active chezmoi profile (read from ~/.config/chezmoi/chezmoi.yaml).
+# The repository root is read from ~/.config/gitrepos/config.yaml (git.root).
+#
+#   CWD under <git_root>/work/  → git@github.com
+#   CWD under <git_root>/perso/ → git@github-perso (profile=work)
+#                               → git@github.com   (profile=lp/sp)
+#   Anywhere else               → git@github.com
+# ---------------------------------------------------------------------------
+
+function _lp_git_root() {
+  local config="$HOME/.config/gitrepos/config.yaml"
+  local root
+  if [[ -f "$config" ]]; then
+    root=$(awk '/^git:/{in_git=1} in_git && /root:/{print $2; exit}' "$config")
+  fi
+  # Expand ~ and fall back to default
+  root="${root:-~/Documents/repositories}"
+  echo "${root/#\~/$HOME}"
+}
+
+function _lp_chezmoi_profile() {
+  local config="$HOME/.config/chezmoi/chezmoi.yaml"
+  if [[ -f "$config" ]]; then
+    # Extract profile: value from YAML (no dep on yq/python)
+    awk '/^data:/{in_data=1} in_data && /profile:/{print $2; exit}' "$config"
+  fi
+}
+
+function _lp_git_host() {
+  local cwd="${1:-$PWD}"
+  local profile
+  profile="$(_lp_chezmoi_profile)"
+
+  local repos_root
+  repos_root="$(_lp_git_root)"
+
+  if [[ "$cwd" == "${repos_root}/work"* ]]; then
+    echo "github.com"
+  elif [[ "$cwd" == "${repos_root}/perso"* ]]; then
+    if [[ "$profile" == "work" ]]; then
+      echo "github-perso"
+    else
+      echo "github.com"
+    fi
+  else
+    echo "github.com"
+  fi
+}
+
+function gclone() {
+  if [[ -z "$1" ]]; then
+    echo "Usage: gclone <org>/<repo>[.git] [target-dir]"
+    return 1
+  fi
+
+  local spec="$1"
+  local target="$2"
+
+  # Strip trailing .git if present, then re-add for consistency
+  spec="${spec%.git}"
+
+  local host
+  host="$(_lp_git_host "$PWD")"
+
+  local url="git@${host}:${spec}.git"
+
+  # Determine the local directory name git will use
+  local dest
+  if [[ -n "$target" ]]; then
+    dest="$target"
+  else
+    dest="${spec:t}"  # last component of org/repo, without .git
+  fi
+
+  echo "Cloning: $url"
+  if git clone "$url" ${target:+"$target"}; then
+    cd "$dest"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# repd — navigate to a repository root directory
+# ---------------------------------------------------------------------------
+
+function repd() {
+  local -a rootdirs
+  rootdirs=("${(@f)$(_lp_build_rootdirs_cache)}")
+  rootdirs=("${(@u)rootdirs[@]}")
+  rootdirs=("${rootdirs[@]:#}")  # remove empty entries
+
+  local query="$1"
+  local -a matches
+
+  for rootdir in "${rootdirs[@]}"; do
+    [[ -d "$rootdir" ]] || continue
+    [[ -z "$query" || "${rootdir:t:l}" == ${query:l}* ]] || continue
+    matches+=("$rootdir")
+  done
+
+  if [[ ${#matches[@]} -eq 0 ]]; then
+    echo "No root directory matching '$query' found."
+    return 1
+  elif [[ ${#matches[@]} -eq 1 ]]; then
+    cd "${matches[1]}"
+  else
+    local chosen
+    chosen=$(printf '%s\n' "${matches[@]}" | fzf --prompt="Select root: " --height=10)
+    [[ -z "$chosen" ]] && return 0
+    cd "$chosen"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Repo lookup — level 1 (rootdir/repo_name) then level 2 (rootdir/*/repo_name)
 # ---------------------------------------------------------------------------
 
@@ -114,6 +233,74 @@ function orep() {
   _internal_rep "$1" "open"
 }
 
+# lrep — like rep, but scoped to the current git store directory.
+# Finds the deepest known rootdir that contains $PWD, then filters
+# candidates to only those under that rootdir.
+function lrep() {
+  local query="$1"
+  local cwd="$PWD"
+
+  # Find the deepest rootdir that is a prefix of CWD
+  local -a rootdirs
+  rootdirs=("${(@f)$(_lp_build_rootdirs_cache)}")
+  rootdirs=("${rootdirs[@]:#}")
+
+  local local_root=""
+  local rootdir
+  for rootdir in "${rootdirs[@]}"; do
+    [[ -z "$rootdir" || ! -d "$rootdir" ]] && continue
+    # CWD must be inside this rootdir (or be the rootdir itself)
+    [[ "$cwd" == "$rootdir" || "$cwd" == "$rootdir/"* ]] || continue
+    # Keep the deepest match
+    [[ ${#rootdir} -gt ${#local_root} ]] && local_root="$rootdir"
+  done
+
+  if [[ -z "$local_root" ]]; then
+    echo "lrep: not inside a known repository store. Use 'rep' instead."
+    return 1
+  fi
+
+  # Search directly within local_root only (level 1 + level 2)
+  local -a matches
+  local candidate category
+
+  # Level 1: local_root/repo_name
+  for candidate in "$local_root"/*/; do
+    candidate="${candidate%/}"
+    [[ "${candidate:t:l}" == ${query:l}* ]] || continue
+    [[ -d "$candidate/.git" ]] || continue
+    matches+=("$candidate")
+  done
+
+  # Level 2: local_root/category/repo_name
+  for category in "$local_root"/*/; do
+    category="${category%/}"
+    [[ ! -d "$category" ]] && continue
+    [[ -d "$category/.git" ]] && continue
+    for candidate in "$category"/*/(N); do
+      candidate="${candidate%/}"
+      [[ "${candidate:t:l}" == ${query:l}* ]] || continue
+      [[ -d "$candidate/.git" ]] || continue
+      matches+=("$candidate")
+    done
+  done
+
+  matches=("${(@u)matches}")
+
+  if [[ ${#matches[@]} -eq 0 ]]; then
+    local label="${local_root:t}"
+    echo "Repository '${query}' not found in '$label'."
+    return 1
+  elif [[ ${#matches[@]} -eq 1 ]]; then
+    cd "${matches[1]}"
+  else
+    local chosen
+    chosen=$(printf '%s\n' "${matches[@]}" | fzf --prompt="Multiple matches for '${query}' in '${local_root:t}': " --height=10)
+    [[ -z "$chosen" ]] && return 0
+    cd "$chosen"
+  fi
+}
+
 _internal_rep() {
   local query="$1"
   local action="$2"
@@ -139,7 +326,6 @@ _internal_rep() {
     cd "$chosen"
   fi
 }
-
 # ---------------------------------------------------------------------------
 # Git repository management
 # ---------------------------------------------------------------------------
