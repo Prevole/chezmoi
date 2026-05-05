@@ -48,6 +48,7 @@
 
 [core]
   excludesfile = {{ .chezmoi.homeDir }}/.gitignore
+  pager = diff-so-fancy | less --tabs=4 -RFX
 
 [pull]
 	rebase = true
