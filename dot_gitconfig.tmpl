@@ -22,14 +22,12 @@
   ci = commit -m
   ca = commit --amend
   a = add .
-  pt = !"git push && git push --tags"
   g = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
   ga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all
   graph = log --oneline --graph --decorate --all
   info = !cat .git/config
   i = info
   ei = !$EDITOR .git/config
-  l = !eza -la --sort=modified
   lcb = "!f() { git fetch --prune && git branch --merged | grep -Ev \"(^\\*|master|main|dev)\"; }; f"
   cb = "!f() { git fetch --prune && git branch --merged | grep -Ev \"(^\\*|master|main|dev)\" | xargs git branch -d; }; f"
 
