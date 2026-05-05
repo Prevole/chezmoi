@@ -467,33 +467,74 @@ compdef _cedit cedit
 
 function mega-update() {
   local sep="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  local preview=false
+
+  for arg in "$@"; do
+    case "$arg" in
+      --preview) preview=true ;;
+      *) echo "Unknown option: $arg"; return 1 ;;
+    esac
+  done
 
   echo "$sep"
   echo "chezmoi"
   echo "$sep"
-  chezmoi update
+  if $preview; then
+    GIT_PAGER=cat chezmoi update --dry-run --verbose --no-pager
+  else
+    chezmoi update
+  fi
 
   echo "$sep"
   echo "brew"
   echo "$sep"
-  brew update && brew upgrade && brew cleanup
+  if $preview; then
+    brew update && brew outdated
+  else
+    brew update && brew upgrade && brew cleanup
+  fi
 
   echo "$sep"
   echo "oh-my-zsh"
   echo "$sep"
-  omz update
+  if $preview; then
+    local omz_current omz_remote
+    omz_current=$(git -C "$ZSH" rev-parse --short HEAD 2>/dev/null)
+    git -C "$ZSH" fetch --quiet origin master 2>/dev/null
+    omz_remote=$(git -C "$ZSH" rev-parse --short origin/master 2>/dev/null)
+    if [[ "$omz_current" == "$omz_remote" ]]; then
+      echo "oh-my-zsh: up to date ($omz_current)"
+    else
+      echo "oh-my-zsh: update available $omz_current → $omz_remote"
+      git -C "$ZSH" log --oneline --no-pager "${omz_current}..origin/master" 2>/dev/null
+    fi
+  else
+    omz update
+  fi
 
   echo "$sep"
   echo "mise"
   echo "$sep"
-  mise upgrade --yes
+  if $preview; then
+    mise outdated
+  else
+    mise upgrade --yes
+  fi
 
   echo "$sep"
   echo "gh extensions"
   echo "$sep"
-  gh extension upgrade --all
+  if $preview; then
+    gh extension list
+  else
+    gh extension upgrade --all
+  fi
 
   echo "$sep"
-  echo "mega-update done"
+  if $preview; then
+    echo "mega-update preview done (no changes applied)"
+  else
+    echo "mega-update done"
+  fi
   echo "$sep"
 }
