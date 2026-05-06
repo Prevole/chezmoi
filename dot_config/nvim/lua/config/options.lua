@@ -8,17 +8,20 @@ vim.opt.clipboard = "unnamedplus"
 -- Enable mouse support (allows mouse selection to interact with clipboard)
 vim.opt.mouse = "a"
 
--- Use OSC 52 clipboard provider so clipboard works through terminal multiplexers (Zellij)
+-- Use OSC 52 for copy (write) but pbpaste for paste (read) on macOS.
+-- Ghostty supports OSC 52 write but not OSC 52 read (paste query), which
+-- causes a blocking timeout when p is pressed after y.
 if vim.env.SSH_TTY ~= nil or os.getenv("ZELLIJ") ~= nil then
+  local is_mac = vim.fn.has("mac") == 1
   vim.g.clipboard = {
-    name = "OSC 52",
+    name = "OSC 52 (copy) + pbpaste (paste)",
     copy = {
       ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
       ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
     },
     paste = {
-      ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
-      ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+      ["+"] = is_mac and { "pbpaste" } or require("vim.ui.clipboard.osc52").paste("+"),
+      ["*"] = is_mac and { "pbpaste" } or require("vim.ui.clipboard.osc52").paste("*"),
     },
   }
 end
