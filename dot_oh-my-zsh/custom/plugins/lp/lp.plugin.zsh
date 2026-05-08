@@ -415,6 +415,41 @@ function sprof() {
   source ~/.zshrc
 }
 
+function envsetup() {
+  local envrc_file=".envrc"
+  local sample_file=".envrc.sample"
+  local oprc_file=".oprc"
+
+  if [[ -e "$envrc_file" ]]; then
+    echo "$envrc_file already exists"
+  else
+    cat > "$envrc_file" <<'EOF'
+use oprc
+EOF
+    echo "$envrc_file created"
+  fi
+
+  if [[ -e "$sample_file" ]]; then
+    echo "$sample_file already exists"
+  else
+    cat > "$sample_file" <<'EOF'
+use oprc
+EOF
+    echo "$sample_file created"
+  fi
+
+  if [[ -e "$oprc_file" ]]; then
+    echo "$oprc_file already exists"
+  else
+    cat > "$oprc_file" <<'EOF'
+# OP_SERVICE_ACCOUNT_TOKEN=op://<vault>/<item>/<field>
+EOF
+    echo "$oprc_file created"
+  fi
+
+  echo "Run 'direnv allow' to load .envrc"
+}
+
 function repos_pull() {
   local sep="#############################################"
   echo "$sep"
