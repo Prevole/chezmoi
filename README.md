@@ -2,374 +2,46 @@
 
 Personal macOS dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 
----
+This repository centralizes the configuration of a macOS development environment and automates the setup of a new machine from scratch: shell, tools, applications, macOS system preferences, Git repositories, and Dock layout.
 
-## Introduction
-
-This repository centralizes the configuration of a macOS development environment. It automates the setup of a new machine from scratch: shell, tools, applications, macOS system preferences, Git repositories, and Dock layout.
-
-Sensitive data (SSH keys, tokens, secrets) is never stored in this repository. It lives in 1Password and is fetched at runtime via the `op` CLI.
-
----
+Sensitive data (SSH keys, tokens, secrets) is never stored here. It lives in 1Password and is fetched at runtime via the `op` CLI.
 
 ## Main tools
 
 | Tool | Role |
 |---|---|
 | [chezmoi](https://www.chezmoi.io/) | Dotfile manager — templates, profiles, scripts |
-| [1Password](https://1password.com/) | Secret storage — SSH keys, Git repository list |
+| [1Password](https://1password.com/) | Secret storage — SSH keys, Git identity, repository lists |
 | [Homebrew](https://brew.sh/) | Package manager — CLI tools and macOS applications |
 | [mise](https://mise.jdx.dev/) | Runtime version manager — Java, Node, Python, etc. |
 | [Oh My Zsh](https://ohmyz.sh/) | Zsh framework — plugins, themes, custom functions |
 
----
+## Quickstart
 
-## Computer setup
+1. **Install developer tools** — `xcode-select --install`
+2. **Prepare 1Password** — create the `chezmoi` vault and the required items (see [1Password setup](doc/1password.md))
+3. **Clone over HTTPS** — `git clone https://github.com/<user>/<repo>.git /tmp/chezmoi`
+4. **Run the setup script** — `/tmp/chezmoi/scripts/mac-setup.sh`
+5. **Follow the interactive prompts** — profile choice, 1Password Developer Settings, GitHub SSH key upload
+6. **Reboot** — `sudo reboot`
 
-### 1. Install developer tools
+See [doc/setup.md](doc/setup.md) for the full step-by-step procedure.
 
-> This will make git available in the terminal.
+## Documentation
 
-```sh
-xcode-select --install
-```
-
-### 2. Set up 1Password
-
-Before cloning this repository, prepare the following items in 1Password.
-
-#### Vault: `chezmoi`
-
-Create a vault named `chezmoi`. This is the central vault for all data used by this setup.
-
-#### Item: `GitHub Configurations`
-
-> **Warning**: The configuration of GitHub stored in 1Password is subject to specific and personal setup.
-> 
-> In my case, I have two different setups: One for work with two GitHub Accounts, and one for personal use with only
-> one main GitHub Account.
-
-Create a **Login** item named `GitHub Configurations` in the `chezmoi` vault with the following fields (as an example):
-
-| Field | Description |
+| Page | Description |
 |---|---|
-| `username` | Your GitHub username |
-| `email` | Your commit email address |
-| `name` | Your display name (used in Git commits) |
-| `org` | Your GitHub organization (work profile only) |
-
-These values are used to populate `~/.gitconfig` and profile-specific Git configs via chezmoi templates.
-
-#### Item: `Git Repositories - <profile>`
-
-Create one item per profile (`Git Repositories - work`, `Git Repositories - lp`, `Git Repositories - sp`) in the `chezmoi` vault.
-
-Each item is a **Secure Note** whose `notesPlain` field holds a YAML document with your list of repositories. The `name` field is optional — if omitted, the folder name is inferred from the URL basename. Use `name` only when your local folder name differs from the repository name.
-
-The document must always start with a `repositories:` key.
-
-**With categories:**
-```yaml
-repositories:
-  work:
-    - url: git@github.com:org/repo.git             # folder name inferred from URL
-    - name: custom-folder                           # explicit folder name
-      url: git@github.com:org/repo.git
-  perso:
-    - url: git@github-perso:user/repo.git
-```
-
-**Flat list (no categories):**
-```yaml
-repositories:
-  - url: git@github.com:org/repo.git
-```
-
-> Repositories are cloned into `<root>/<category>/<name>` when categories are defined, or `<root>/<name>` for flat lists.
-> 
-> The root directory is defined in `~/.config/gitrepos/config.yaml` (rendered from `dot_config/gitrepos/config.yaml.tmpl`).
-
-### 3. Clone this repository
-
-Clone over HTTPS into `/tmp` — SSH is not yet set up at this point. The directory is cleaned up automatically on next restart.
-
-```sh
-git clone https://github.com/<your-username>/<this-repo>.git /tmp/chezmoi
-```
-
-### 4. Run the setup script
-
-```sh
-/tmp/chezmoi/scripts/mac-setup.sh
-```
-
-The script sources each file in `setup.d/` in order. It will:
-
-> The script pauses at several points to wait for manual actions (adding SSH keys to GitHub, confirming 1Password 
-> settings). macOS may also display security popups or prompt for your user password — these are expected and required.
-
-1. Prompt for the **profile** — enter one of:
-   - `work` — work machine (work-specific tools, pro Git config, work Brewfile)
-   - `lp` — personal machine
-   - `sp` — secondary personal machine
-2. Install Homebrew
-3. Configure the machine hostname
-4. Sign in to the 1Password CLI — pause to let you configure Developer Settings (see step 5)
-5. Generate SSH keys directly in 1Password — pause to let you add the public keys to GitHub
-6. Install chezmoi and render the Brewfile for the selected profile
-7. Install all Homebrew packages for the chosen profile
-8. Create standard user directories
-9. Apply dotfiles via chezmoi, then restart 1Password
-10. Install global runtimes via `mise install`
-11. Clone Git repositories from 1Password
-12. Remove temporary SSH key files from disk
-
-The profile choice is written to `~/.config/chezmoi/chezmoi.yaml` and remembered by `promptChoiceOnce`. It will not be 
-asked again on subsequent `chezmoi apply` runs.
-
-### 5. Configure 1Password
-
-The setup script opens 1Password and pauses at several points.
-
-#### Developer Settings
-
-When 1Password opens, sign in and configure **Settings → Developer** as shown below:
-
-![1Password Developer Settings](doc/images/1password-devsettings.png)
-
-| Setting | Value |
-|---|---|
-| Use the SSH Agent | enabled |
-| Ask approval for each new | `application and terminal session` |
-| Remember key approval | `until 1Password quits` |
-| Display key names when authorizing connections | enabled |
-| Generate SSH config file with bookmarked hosts | enabled |
-| Integrate with 1Password CLI | enabled |
-
-Press Enter in the terminal to continue.
-
-#### Machine vault (automatic)
-
-The script signs in to the `op` CLI and creates a vault named after your machine hostname. This vault is used by 
-`agent.toml` to serve SSH keys.
-
-#### SSH key generation (automatic)
-
-SSH keys are generated directly inside 1Password using `op item create --ssh-generate-key Ed25519` — no private key 
-file is ever written to disk at this stage.
-
-For each key, the script displays a `log_box` with instructions. Open the 1Password item and use the built-in autofill 
-integration to add the public key directly to GitHub — no copy/paste needed. Press Enter in the terminal to continue.
-
-The script also reminds you to set the **Hosts** field on each 1Password SSH Key item — this is required for the 
-1Password SSH agent to select the correct key per GitHub account:
-
-| Key | Hosts value |
-|---|---|
-| Primary (work/personal) | `ssh://git@github.com` |
-| Personal (work profile only) | `ssh://git@github-perso` |
-
-For more details on GitHub integration:
-- [Autofill public keys on GitHub](https://developer.1password.com/docs/ssh/public-key-autofill#github)
-- [Register a key for commit signing](https://developer.1password.com/docs/ssh/git-commit-signing#step-2-register-your-public-key)
-
-On a **work** profile, the script optionally generates a second key for a personal GitHub account.
-
-1Password is then restarted so the SSH agent picks up the new keys. Once it is back up and the agent shows as running, 
-press Enter to continue.
-
-### 6. Restart
-
-```sh
-sudo reboot
-```
-
----
-
-## How tos
-
-### Clone your Git repositories
-
-```sh
-repos_clone
-```
-
-Reads the `Git Repositories - <profile>` item from 1Password (vault `chezmoi`) and clones any repository not already
-present on the filesystem. The root directory is read from `~/.config/gitrepos/config.yaml`.
-
-Repositories are cloned into `<root>/<category>/<name>` when categories are defined, or `<root>/<name>` for flat lists.
-The `name` field is optional — if omitted, the repository name is inferred from the URL basename (e.g. `foo` from `git@github.com:org/foo.git`).
-
-### Track a new Git repository
-
-From inside any Git repository:
-
-```sh
-repo_track
-```
-
-Detects the category automatically from the directory structure:
-- `<root>/<repo>` → flat list (no category)
-- `<root>/<category>/<repo>` → categorized
-
-The `name` is omitted from the stored entry when the folder name matches the repository name in the URL, since `repos_clone` will infer it automatically. If the folder name differs (e.g. a local alias), `name` is stored explicitly.
-
-### Import a repository list from a YAML file
-
-```sh
-repos_track_import <file.yaml>
-```
-
-Replaces the `Git Repositories - <profile>` item in 1Password with the contents of a local YAML file. Useful to bulk-import or restore a repository list.
-
-The file must follow the same format as the `notesPlain` field of the 1Password Secure Note:
-
-```yaml
-# With categories
-repositories:
-  work:
-    - url: git@github.com:org/repo.git          # name inferred from URL
-    - name: custom-name                          # explicit name when folder differs
-      url: git@github.com:org/repo.git
-  perso:
-    - url: git@github-perso:user/repo.git
-
-# Or flat list
-repositories:
-  - url: git@github.com:org/repo.git
-```
-
-### Change global runtime tool versions (mise)
-
-Language runtimes (Java, Node.js, Python, Maven, Terraform, Terragrunt, etc.) are managed by [mise](https://mise.jdx.dev/).
-
-Global versions are defined in `dot_config/mise/config.toml` → `~/.config/mise/config.toml`:
-
-```toml
-[tools]
-java = "temurin"
-maven = "latest"
-node = "latest"
-python = "latest"
-terraform = "latest"
-terragrunt = "latest"
-```
-
-To add or change a version:
-
-```sh
-chezmoi edit ~/.config/mise/config.toml  # add or update the tool entry
-chezmoi apply                            # Apply the configuration change
-mise install                             # install the new version(s)
-```
-
-To browse available versions: `mise ls-remote <tool>`.
-
-Per-project overrides can be added with a `.mise.toml` file at the project root — these are not managed by this 
-repository.
-
-### Add or change CLI tools and applications (Homebrew)
-
-Specific tools and applications are declared in `profiles/<profile>/homebrew/Brewfile`, included at render time 
-into `dot_homebrew/Brewfile.tmpl`. For common tools and applications, see `dot_homebrew/Brewfile.tmpl`.
-
-To find the correct name: `brew search "tool-name"`.
-
-```sh
-# For specific profile
-vi profiles/<profile>/homebrew/Brewfile  # add brew "tool" or cask "app"
-chezmoi apply                    # install the new tool or app
-
-# For common tools and applications 
-chezmoi edit ~/.homebrew/Brewfile  # add brew "tool" or cask "app"
-chezmoi apply                      # install the new tool or app
-
-# Once applied, run brew
-brew install -g
-```
-
-### Add items to the Dock (dockutil)
-
-Dock contents are declared in `profiles/<profile>/.chezmoidata/dock.yaml`:
-
-```yaml
-dock:
-  apps:
-    - /Applications/MyApp.app
-```
-
-Edit the file for your profile, then run `chezmoi apply` — the Dock script re-runs automatically when the file has changed.
-
----
-
-## Architecture
-
-### Key files and directories
-
-| Path | Description |
-|---|---|
-| `scripts/mac-setup.sh` | Bootstrap orchestrator — sources `setup.d/` scripts in order |
-| `scripts/setup.d/` | Individual setup steps (see below) |
-| `.chezmoi.yaml.tmpl` | chezmoi config template — prompts for `profile` |
-| `profiles/<profile>/` | Per-profile data (Dock, Brewfile) |
-| `dot_homebrew/Brewfile.tmpl` | Homebrew packages — includes the profile Brewfile |
-| `dot_config/gitrepos/config.yaml.tmpl` | Git root and 1Password vault/item for repos |
-| `dot_config/mise/config.toml` | Global runtime tool versions |
-| `dot_gitconfig.tmpl` | Git global config — profile-aware |
-| `dot_zshrc.tmpl` | Zsh config — profile-aware plugin list |
-| `dot_ssh/config.tmpl` | SSH config — profile-aware |
-| `dot_oh-my-zsh/custom/plugins/lp/` | Custom Oh My Zsh plugin (see below) |
-| `.chezmoiscripts/` | Scripts auto-run by chezmoi on apply |
-
-
-### setup.d — how it works
-
-`mac-setup.sh` sources each `setup.d/NN-*.sh` file in alphabetical order. Scripts are **sourced, not executed** — they 
-all share the same shell environment and can pass exported variables to each other.
-
-| Script | Role |
-|---|---|
-| `_utils.sh` | Color helpers: `log_success`, `log_skip`, `log_warn`, `log_info`, `log_title`, `log_box` |
-| `00-profile.sh` | Prompt for profile, write `chezmoi.yaml` |
-| `01-homebrew.sh` | Install Homebrew |
-| `02-machine.sh` | Set machine hostname |
-| `03-1password.sh` | Install 1Password and op CLI, login, Developer Settings pause, machine vault creation |
-| `04-ssh-keys.sh` | Generate SSH keys in 1Password via `op`, pause for GitHub registration |
-| `05-chezmoi.sh` | Install chezmoi, render Brewfile for the selected profile |
-| `06-apps.sh` | Run `brew bundle` with the rendered Brewfile |
-| `07-directories.sh` | Create standard user directories (e.g. `~/Documents/repositories`) |
-| `08-dotfiles.sh` | Temporarily extract SSH key, initialize and apply chezmoi, restart 1Password |
-| `09-mise.sh` | Install global runtimes declared in `~/.config/mise/config.toml` via `mise install` |
-| `10-repos.sh` | Clone Git repositories listed in 1Password (`Git Repositories - <profile>`) |
-| `98-ssh-cleanup.sh` | Remove temporary SSH key files extracted during setup |
-| `99-restart.sh` | Prompt to restart |
-
-Every step tries to be idempotent — Checks whether the action is already done and skips with `log_skip` if so.
-
-### profiles — how it works
-
-`profiles/` contains per-profile data that is **not deployed to the target machine** — it is only read by chezmoi templates at render time. It is excluded from the chezmoi target state via `.chezmoiignore.tmpl`.
-
-```
-profiles/
-  work/
-    .chezmoidata/dock.yaml    ← Dock apps for the work profile
-    homebrew/Brewfile         ← Homebrew packages for the work profile
-  lp/
-    ...
-  sp/
-    ...
-```
-
-The active profile is selected once during setup (stored in `~/.config/chezmoi/chezmoi.yaml`) and referenced in templates as `.profile`.
-
-### Personal data in 1Password
-
-No personal data is stored in this repository. The following items must exist in the `chezmoi` vault before running chezmoi:
-
-| Item | Used by |
-|---|---|
-| `GitHub Configurations` | `dot_gitconfig.tmpl`, `dot_gitconf/*.config.tmpl` |
-| `Git Repositories - <profile>` | `repos_clone`, `repo_track` (via `~/.config/gitrepos/config.yaml`) |
-
-SSH keys are stored in the machine vault (named after the hostname) and served by the 1Password SSH agent — no private key files live on disk after the initial setup.
+| [Setup](doc/setup.md) | Step-by-step machine bootstrap |
+| [1Password](doc/1password.md) | Vault layout, items, SSH keys, secret model |
+| [Profiles](doc/profiles.md) | `work` / `lp` / `sp` — how profile-aware rendering works |
+| [Homebrew](doc/homebrew.md) | Common vs profile-specific Brewfiles |
+| [Git repositories](doc/git-repos.md) | `repos_clone`, `repo_track`, YAML import |
+| [mise](doc/mise.md) | Global runtime version management |
+| [Dock](doc/dock.md) | dockutil-driven Dock layout per profile |
+| [Architecture](doc/architecture.md) | `setup.d`, `.chezmoiscripts`, templates, ignore rules |
+| [Oh My Zsh plugin (`lp`)](doc/oh-my-zsh-plugin.md) | Custom plugin: navigation, cloning, mega-update |
+| [Troubleshooting](doc/troubleshooting.md) | Common pitfalls and fixes |
+
+## Architecture in one paragraph
+
+`scripts/mac-setup.sh` sources `scripts/setup.d/NN-*.sh` in order to bootstrap a fresh machine (Homebrew, 1Password CLI, SSH keys, chezmoi, apps, mise, repos). `chezmoi apply` then deploys `dot_*` templates to `$HOME`, runs the `.chezmoiscripts/run_once_osx-*` macOS defaults, and rebuilds the Dock on-change. Per-profile data lives in `profiles/<profile>/` and is loaded by templates at render time. See [Architecture](doc/architecture.md) for the full picture.
