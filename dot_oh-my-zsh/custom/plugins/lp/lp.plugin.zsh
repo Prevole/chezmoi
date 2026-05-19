@@ -501,7 +501,6 @@ function _cedit() {
 compdef _cedit cedit
 
 function mega-update() {
-  local sep="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   local preview=false
 
   for arg in "$@"; do
@@ -511,65 +510,114 @@ function mega-update() {
     esac
   done
 
-  echo "$sep"
-  echo "chezmoi"
-  echo "$sep"
+  # Colors (fallback to empty if not a tty)
+  local c_reset c_bold c_cyan c_blue c_green c_yellow c_magenta c_dim
+  if [[ -t 1 ]]; then
+    c_reset=$'\e[0m'
+    c_bold=$'\e[1m'
+    c_dim=$'\e[2m'
+    c_cyan=$'\e[36m'
+    c_blue=$'\e[34m'
+    c_green=$'\e[32m'
+    c_yellow=$'\e[33m'
+    c_magenta=$'\e[35m'
+  fi
+
+  local sep="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  _mu_header() {
+    local title="$1"
+    local color="${2:-$c_cyan}"
+    print
+    print -- "${color}${c_bold}${sep}${c_reset}"
+    print -- "${color}${c_bold}▶ ${title}${c_reset}"
+    print -- "${color}${c_bold}${sep}${c_reset}"
+  }
+
+  _mu_subheader() {
+    print
+    print -- "${c_dim}── $1 ──${c_reset}"
+  }
+
+  _mu_note() {
+    print -- "${c_yellow}! $1${c_reset}"
+  }
+
+  local mode_label
+  if $preview; then
+    mode_label="${c_yellow}preview${c_reset}"
+  else
+    mode_label="${c_green}apply${c_reset}"
+  fi
+  print
+  print -- "${c_magenta}${c_bold}╭${sep}╮${c_reset}"
+  print -- "${c_magenta}${c_bold}│ mega-update — mode: ${mode_label}${c_magenta}${c_bold}${c_reset}"
+  print -- "${c_magenta}${c_bold}╰${sep}╯${c_reset}"
+
+  _mu_header "chezmoi" "$c_blue"
   if $preview; then
     GIT_PAGER=cat chezmoi update --dry-run --verbose --no-pager
   else
     chezmoi update
   fi
 
-  echo "$sep"
-  echo "brew"
-  echo "$sep"
+  _mu_header "brew" "$c_blue"
   if $preview; then
     brew update && brew outdated
   else
     brew update && brew upgrade && brew cleanup
   fi
 
-  echo "$sep"
-  echo "oh-my-zsh"
-  echo "$sep"
+  _mu_header "brew bundle delta" "$c_blue"
+  print -- "${c_dim}Brewfile: ~/.homebrew/Brewfile${c_reset}"
+  if [[ -f "$HOME/.homebrew/Brewfile" ]]; then
+    _mu_subheader "installed but not in Brewfile (manual installs)"
+    brew bundle cleanup --file="$HOME/.homebrew/Brewfile"
+    _mu_subheader "in Brewfile but not installed"
+    brew bundle check --file="$HOME/.homebrew/Brewfile" --verbose
+  else
+    _mu_note "No Brewfile found at ~/.homebrew/Brewfile"
+  fi
+
+  _mu_header "oh-my-zsh" "$c_blue"
   if $preview; then
     local omz_current omz_remote
     omz_current=$(git -C "$ZSH" rev-parse --short HEAD 2>/dev/null)
     git -C "$ZSH" fetch --quiet origin master 2>/dev/null
     omz_remote=$(git -C "$ZSH" rev-parse --short origin/master 2>/dev/null)
     if [[ "$omz_current" == "$omz_remote" ]]; then
-      echo "oh-my-zsh: up to date ($omz_current)"
+      print -- "${c_green}up to date${c_reset} (${omz_current})"
     else
-      echo "oh-my-zsh: update available $omz_current → $omz_remote"
+      print -- "${c_yellow}update available${c_reset} ${omz_current} → ${omz_remote}"
       git -C "$ZSH" log --oneline --no-pager "${omz_current}..origin/master" 2>/dev/null
     fi
   else
     omz update
   fi
 
-  echo "$sep"
-  echo "mise"
-  echo "$sep"
+  _mu_header "mise" "$c_blue"
   if $preview; then
     mise outdated
   else
     mise upgrade --yes
   fi
 
-  echo "$sep"
-  echo "gh extensions"
-  echo "$sep"
+  _mu_header "gh extensions" "$c_blue"
   if $preview; then
     gh extension list
   else
     gh extension upgrade --all
   fi
 
-  echo "$sep"
+  print
+  print -- "${c_green}${c_bold}╭${sep}╮${c_reset}"
   if $preview; then
-    echo "mega-update preview done (no changes applied)"
+    print -- "${c_green}${c_bold}│ ✓ mega-update preview done (no changes applied)${c_reset}"
   else
-    echo "mega-update done"
+    print -- "${c_green}${c_bold}│ ✓ mega-update done${c_reset}"
   fi
-  echo "$sep"
+  print -- "${c_green}${c_bold}╰${sep}╯${c_reset}"
+  print
+
+  unfunction _mu_header _mu_subheader _mu_note
 }
