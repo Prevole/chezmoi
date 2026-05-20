@@ -17,6 +17,10 @@ export const SessionNotificationPlugin = async ({ $ }) => {
       if (event.type === "session.error") {
         await notify("Erreur dans la session", "OpenCode", "Basso")
       }
+
+      if (event.type === "permission.asked") {
+        await notify("Permission demandée", "OpenCode", "Ping")
+      }
     },
   }
 }
