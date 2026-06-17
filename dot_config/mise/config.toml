@@ -7,6 +7,7 @@ ruby = "latest"
 terraform = "latest"
 terragrunt = "latest"
 terraform-docs = "latest"
+tflint = "latest"
 
 "npm:media-archiver" = "latest"
 "npm:gs-download" = "latest"
