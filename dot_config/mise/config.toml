@@ -6,11 +6,12 @@ python = "latest"
 ruby = "latest"
 terraform = "latest"
 terragrunt = "latest"
-terraform-docs = "latest"
-tflint = "latest"
 
 "npm:media-archiver" = "latest"
 "npm:gs-download" = "latest"
+terraform-docs = "latest"
+tflint = "latest"
+shellcheck = "latest"
 
 [settings]
 # Use precompiled Ruby binaries instead of compiling from source
