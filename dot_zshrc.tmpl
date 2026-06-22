@@ -13,6 +13,13 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 
 DEFAULT_USER=$(whoami)
 
+# Homebrew — supports both Apple Silicon (/opt/homebrew) and Intel (/usr/local)
+if [[ -x "/opt/homebrew/bin/brew" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x "/usr/local/bin/brew" ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
 setopt EXTENDED_HISTORY
 setopt HIST_FIND_NO_DUPS
 
@@ -71,13 +78,6 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
 export PATH="{{ .chezmoi.homeDir }}/.rd/bin:$PATH"
 ### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
-
-# Homebrew — supports both Apple Silicon (/opt/homebrew) and Intel (/usr/local)
-if [[ -x "/opt/homebrew/bin/brew" ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [[ -x "/usr/local/bin/brew" ]]; then
-  eval "$(/usr/local/bin/brew shellenv)"
-fi
 
 eval "$(mise activate zsh)"
 eval "$(zoxide init zsh)"
