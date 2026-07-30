@@ -6,6 +6,7 @@ python = "latest"
 ruby = "latest"
 terraform = "latest"
 terragrunt = "latest"
+uv = "latest"
 
 "npm:media-archiver" = "latest"
 "npm:gs-download" = "latest"
