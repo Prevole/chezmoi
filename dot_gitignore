@@ -49,3 +49,5 @@ Thumbs.db
 .doc
 .direnv/
 *.orig
+
+mise.toml
