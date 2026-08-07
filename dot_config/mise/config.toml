@@ -17,5 +17,5 @@ shellcheck = "latest"
 [settings]
 # Use precompiled Ruby binaries instead of compiling from source
 ruby.compile = false
-# no_hooks = true
+no_hooks = true
 # age.strict = false
