@@ -19,3 +19,4 @@ shellcheck = "latest"
 ruby.compile = false
 no_hooks = true
 age.strict = false
+experimental=true
