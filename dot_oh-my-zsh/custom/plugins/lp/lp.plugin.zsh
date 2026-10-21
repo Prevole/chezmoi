@@ -201,7 +201,7 @@ _lp_find_repos() {
     [[ -z "$rootdir" ]] && continue
 
     # Level 1: rootdir/repo_name — case-insensitive prefix match
-    for candidate in "$rootdir"/*/; do
+    for candidate in "$rootdir"/*/(N); do
       candidate="${candidate%/}"
       [[ "${candidate:t:l}" == ${query:l}* ]] || continue
       [[ -d "$candidate/.git" ]] || continue
@@ -265,7 +265,7 @@ function lrep() {
   local candidate category
 
   # Level 1: local_root/repo_name
-  for candidate in "$local_root"/*/; do
+  for candidate in "$local_root"/*/(N); do
     candidate="${candidate%/}"
     [[ "${candidate:t:l}" == ${query:l}* ]] || continue
     [[ -d "$candidate/.git" ]] || continue
@@ -273,7 +273,7 @@ function lrep() {
   done
 
   # Level 2: local_root/category/repo_name
-  for category in "$local_root"/*/; do
+  for category in "$local_root"/*/(N); do
     category="${category%/}"
     [[ ! -d "$category" ]] && continue
     [[ -d "$category/.git" ]] && continue
