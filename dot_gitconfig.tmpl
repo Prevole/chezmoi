@@ -27,8 +27,8 @@
   info = !cat .git/config
   i = info
   ei = !$EDITOR .git/config
-  lcb = "!f() { git fetch --prune && git branch --merged | grep -Ev \"(^\\*|master|main|dev)\"; }; f"
-  cb = "!f() { git fetch --prune && git branch --merged | grep -Ev \"(^\\*|master|main|dev)\" | xargs git branch -d; }; f"
+  lcb = "!{{ .chezmoi.homeDir }}/.local/bin/git-cb --list"
+  cb = "!{{ .chezmoi.homeDir }}/.local/bin/git-cb"
 
 [pager]
   branch = false

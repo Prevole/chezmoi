@@ -1,0 +1,360 @@
+#!/usr/bin/env bash
+#
+# git-cb — delete the local branches already merged into the base branch.
+#
+# Two kinds of merges are detected:
+#
+#   merged   the branch tip is an ancestor of the base branch (fast-forward,
+#            merge commit, rebase). Git considers those branches as merged.
+#
+#   squash   the content of the branch is already present in the base branch
+#            (squash merge, cherry-pick). Git does NOT consider them as merged,
+#            so they need a forced deletion (-D) and an explicit confirmation.
+#
+# The base branch is auto-detected (main, master, develop...) and both the local
+# and the remote-tracking versions are used, so a branch squash-merged on the
+# remote is detected even when the base branch has not been pulled yet.
+#
+# Usage: git cb [options]
+
+set -o pipefail
+
+PROG="${0##*/}"
+
+# --------------------------------------------------------------- options ---
+
+list_only=0
+dry_run=0
+assume_yes=0
+do_fetch=1
+verbose=0
+base_override=""
+
+usage() {
+  cat <<EOF
+Usage: git cb [options]
+
+Delete the local branches already merged into the base branch.
+
+Options:
+  -l, --list       list the merged branches, delete nothing
+  -n, --dry-run    show what would be deleted, delete nothing
+  -y, --yes        do not ask for confirmation before the forced deletions
+      --no-fetch   skip "git fetch --prune"
+      --base REF   compare the branches against REF instead of the detected base
+  -v, --verbose    show the details of the detection
+  -h, --help       show this help
+
+Extra branch patterns to protect can be set with:
+  git config --add cb.protect 'release/*'
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -l | --list) list_only=1 ;;
+    -n | --dry-run) dry_run=1 ;;
+    -y | --yes) assume_yes=1 ;;
+    --no-fetch) do_fetch=0 ;;
+    --base) base_override="${2:-}"; shift ;;
+    --base=*) base_override="${1#*=}" ;;
+    -v | --verbose) verbose=1 ;;
+    -h | --help) usage; exit 0 ;;
+    *) printf '%s: unknown option: %s\n' "$PROG" "$1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+# ----------------------------------------------------------------- colors ---
+
+if [ -t 1 ]; then
+  c_reset=$(printf '\033[0m')
+  c_bold=$(printf '\033[1m')
+  c_dim=$(printf '\033[2m')
+  c_red=$(printf '\033[31m')
+  c_green=$(printf '\033[32m')
+  c_yellow=$(printf '\033[33m')
+  c_cyan=$(printf '\033[36m')
+else
+  c_reset='' c_bold='' c_dim='' c_red='' c_green='' c_yellow='' c_cyan=''
+fi
+
+# ------------------------------------------------------------------ setup ---
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  printf '%s: not inside a git repository.\n' "$PROG" >&2
+  exit 1
+fi
+
+if ! git rev-parse --verify --quiet HEAD >/dev/null 2>&1; then
+  printf '%s: the repository has no commit yet.\n' "$PROG" >&2
+  exit 1
+fi
+
+if [ "$do_fetch" -eq 1 ]; then
+  if ! git fetch --prune --quiet; then
+    printf '%s!%s %s: fetch failed, continuing with the local references.\n' \
+      "$c_yellow" "$c_reset" "$PROG" >&2
+  fi
+fi
+
+# ------------------------------------------------------------- base refs ---
+
+base_refs=()
+base_name=""
+
+add_base_ref() {
+  local ref="$1" existing
+  [ -z "$ref" ] && return
+  git rev-parse --verify --quiet "$ref^{commit}" >/dev/null 2>&1 || return
+  for existing in "${base_refs[@]}"; do
+    [ "$existing" = "$ref" ] && return
+  done
+  base_refs+=("$ref")
+}
+
+if [ -n "$base_override" ]; then
+  base_name="$base_override"
+  add_base_ref "$base_override"
+  case "$base_override" in
+    origin/*) ;;
+    *) add_base_ref "origin/$base_override" ;;
+  esac
+else
+  # The remote default branch wins, then the usual local names.
+  head_ref=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+  if [ -n "$head_ref" ]; then
+    base_name="${head_ref#origin/}"
+  fi
+  if [ -z "$base_name" ]; then
+    for candidate in main master develop development trunk; do
+      if git show-ref --verify --quiet "refs/heads/$candidate"; then
+        base_name="$candidate"
+        break
+      fi
+    done
+  fi
+  if [ -z "$base_name" ]; then
+    for candidate in main master develop development trunk; do
+      if git show-ref --verify --quiet "refs/remotes/origin/$candidate"; then
+        base_name="$candidate"
+        break
+      fi
+    done
+  fi
+  if [ -z "$base_name" ]; then
+    printf '%s: no base branch found, use --base REF.\n' "$PROG" >&2
+    exit 1
+  fi
+  add_base_ref "$base_name"
+  add_base_ref "origin/$base_name"
+fi
+
+if [ "${#base_refs[@]}" -eq 0 ]; then
+  printf '%s: base branch "%s" not found, use --base REF.\n' "$PROG" "$base_name" >&2
+  exit 1
+fi
+
+# Branches that are never deleted, whatever their state.
+protected_names=(main master develop development trunk)
+if [ -n "$base_name" ]; then
+  protected_names+=("$base_name")
+fi
+
+is_protected() {
+  local branch="$1" pattern
+  for pattern in "${protected_names[@]}"; do
+    [ "$branch" = "$pattern" ] && return 0
+  done
+  while IFS= read -r pattern; do
+    [ -z "$pattern" ] && continue
+    # shellcheck disable=SC2254 # the pattern is meant to be a glob
+    case "$branch" in
+      $pattern) return 0 ;;
+    esac
+  done <<EOF
+$(git config --get-all cb.protect 2>/dev/null)
+EOF
+  return 1
+}
+
+# -------------------------------------------------------------- detection ---
+
+# Sets DETECT_KIND to "merged", "squash" or "none" and DETECT_BASE to the
+# base reference that matched.
+DETECT_KIND=none
+DETECT_BASE=""
+
+content_already_in_base() {
+  local base="$1" branch="$2" merged_tree base_tree
+  merged_tree=$(git merge-tree --write-tree "$base" "$branch" 2>/dev/null)
+  [ $? -eq 0 ] || return 1
+  merged_tree=$(printf '%s\n' "$merged_tree" | head -n 1)
+  base_tree=$(git rev-parse --verify --quiet "$base^{tree}" 2>/dev/null)
+  [ -n "$merged_tree" ] && [ "$merged_tree" = "$base_tree" ]
+}
+
+detect_branch() {
+  local branch="$1" base
+  DETECT_KIND=none
+  DETECT_BASE=""
+  for base in "${base_refs[@]}"; do
+    if git merge-base --is-ancestor "$branch" "$base" 2>/dev/null; then
+      DETECT_KIND=merged
+      DETECT_BASE="$base"
+      return 0
+    fi
+    if content_already_in_base "$base" "$branch"; then
+      DETECT_KIND=squash
+      DETECT_BASE="$base"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# ------------------------------------------------------------------ loops ---
+
+merged_branches=()
+squash_branches=()
+kept_branches=()
+skipped_branches=()
+
+current_branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null)
+
+while IFS='|' read -r branch worktree; do
+  [ -z "$branch" ] && continue
+  if is_protected "$branch"; then
+    skipped_branches+=("$branch (protected)")
+    continue
+  fi
+  if [ -n "$worktree" ]; then
+    skipped_branches+=("$branch (checked out in $worktree)")
+    continue
+  fi
+  if detect_branch "$branch"; then
+    if [ "$DETECT_KIND" = merged ]; then
+      merged_branches+=("$branch")
+    else
+      squash_branches+=("$branch")
+    fi
+    if [ "$verbose" -eq 1 ]; then
+      ahead=$(git rev-list --count "$DETECT_BASE..$branch" 2>/dev/null)
+      printf '%s→%s %s (%s, %s commit(s) ahead of %s)\n' \
+        "$c_dim" "$c_reset" "$branch" "$DETECT_KIND" "$ahead" "$DETECT_BASE"
+    fi
+  else
+    kept_branches+=("$branch")
+    if [ "$verbose" -eq 1 ]; then
+      ahead=$(git rev-list --count "${base_refs[0]}..$branch" 2>/dev/null)
+      printf '%s→%s %s (not merged, %s commit(s) ahead of %s)\n' \
+        "$c_dim" "$c_reset" "$branch" "$ahead" "${base_refs[0]}"
+    fi
+  fi
+done <<EOF
+$(git for-each-ref --format='%(refname:short)|%(worktreepath)' refs/heads/)
+EOF
+
+# ----------------------------------------------------------------- report ---
+
+if [ "$verbose" -eq 1 ]; then
+  printf '\n%sbase%s: %s (%s)\n' "$c_dim" "$c_reset" "$base_name" "${base_refs[*]}"
+fi
+
+if [ "${#merged_branches[@]}" -eq 0 ] && [ "${#squash_branches[@]}" -eq 0 ]; then
+  printf '%s✓%s No merged branch to delete.\n' "$c_green" "$c_reset"
+  exit 0
+fi
+
+if [ "${#merged_branches[@]}" -gt 0 ]; then
+  printf '%s→%s merged into %s:\n' "$c_green" "$c_reset" "$base_name"
+  for branch in "${merged_branches[@]}"; do
+    printf '  %s%s%s\n' "$c_bold" "$branch" "$c_reset"
+  done
+fi
+
+if [ "${#squash_branches[@]}" -gt 0 ]; then
+  printf '%s→%s squash-merged into %s (content already there, git does not see them as merged):\n' \
+    "$c_yellow" "$c_reset" "$base_name"
+  for branch in "${squash_branches[@]}"; do
+    printf '  %s%s%s\n' "$c_bold" "$branch" "$c_reset"
+  done
+fi
+
+if [ "$list_only" -eq 1 ]; then
+  exit 0
+fi
+
+# --------------------------------------------------------------- deletion ---
+
+deleted=()
+failed=()
+
+if [ "$dry_run" -eq 1 ]; then
+  for branch in "${merged_branches[@]}" "${squash_branches[@]}"; do
+    printf '%s[dry-run]%s would delete %s\n' "$c_dim" "$c_reset" "$branch"
+  done
+else
+  for branch in "${merged_branches[@]}"; do
+    # "-d" is enough for a branch git considers as merged, "-D" is the fallback
+    # when git refuses because the branch is not merged into its upstream.
+    if git branch -d "$branch" >/dev/null 2>&1 || git branch -D "$branch" >/dev/null 2>&1; then
+      deleted+=("$branch")
+    else
+      failed+=("$branch")
+    fi
+  done
+
+  if [ "${#squash_branches[@]}" -gt 0 ]; then
+    answer=""
+    if [ "$assume_yes" -eq 1 ]; then
+      answer=y
+    elif [ ! -t 0 ]; then
+      printf '%s!%s %s: not a terminal, the squash-merged branches are kept (use --yes to force).\n' \
+        "$c_yellow" "$c_reset" "$PROG" >&2
+    else
+      printf '\n%sDelete these squash-merged branches? They need a forced deletion. [y/N]%s ' \
+        "$c_yellow" "$c_reset"
+      read -r answer
+    fi
+    case "$answer" in
+      y | Y | yes | YES | Yes)
+        for branch in "${squash_branches[@]}"; do
+          if git branch -D "$branch" >/dev/null 2>&1; then
+            deleted+=("$branch")
+          else
+            failed+=("$branch")
+          fi
+        done
+        ;;
+      *)
+        printf '%s→%s %s squash-merged branch(es) kept.\n' "$c_yellow" "$c_reset" "$PROG"
+        ;;
+    esac
+  fi
+fi
+
+# ---------------------------------------------------------------- summary ---
+
+printf '\n'
+if [ "${#deleted[@]}" -gt 0 ]; then
+  printf '%s✓%s %s branch(es) deleted: %s\n' \
+    "$c_green" "$c_reset" "$PROG" "${deleted[*]}"
+fi
+if [ "${#failed[@]}" -gt 0 ]; then
+  printf '%s✗%s %s branch(es) could not be deleted: %s\n' \
+    "$c_red" "$c_reset" "$PROG" "${failed[*]}" >&2
+fi
+if [ "${#kept_branches[@]}" -gt 0 ]; then
+  printf '%s→%s %s branch(es) not merged, kept: %s\n' \
+    "$c_dim" "$c_reset" "$PROG" "${kept_branches[*]}"
+fi
+if [ "${#skipped_branches[@]}" -gt 0 ]; then
+  printf '%s→%s %s branch(es) skipped: %s\n' \
+    "$c_dim" "$c_reset" "$PROG" "${skipped_branches[*]}"
+fi
+
+if [ "${#failed[@]}" -gt 0 ]; then
+  exit 1
+fi
+exit 0
